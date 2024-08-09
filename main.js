@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, Menu, dialog, shell } = require('electron');
 const ytdl = require('@distube/ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static');
@@ -17,7 +17,24 @@ app.whenReady().then(async () => {
     app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
     app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
-    ipcMain.handle('download', async (_, link, output) => {
+    ipcMain.handle('title', async (_, link) => {
+        const info = await ytdl.getInfo(link);
+        return info.videoDetails.title;
+    });
+
+    ipcMain.handle('location', async (_, defaultPath) => {
+        const response = await dialog.showSaveDialog({
+            title: 'Export',
+            defaultPath,
+            filters: [{
+                name: 'MP3 Files',
+                extensions: ['mp3']
+            }]
+        });
+        return response.filePath;
+    });
+
+    ipcMain.handle('start', async (_, link, output) => {
         await new Promise((resolve, reject) => ffmpeg(
             ytdl(link, { quality: 'highestaudio', filter: 'audioonly' })
         )
@@ -27,13 +44,16 @@ app.whenReady().then(async () => {
             .on('end', () => { resolve(); })
             .on('error', (err) => { reject(err); })
         );
+        return output;
     });
 });
 
 async function createWindow() {
     browserWindow = new BrowserWindow({
-        x: 0, y: 0, width: 900, height: 600,
-        webPreferences: { preload: join(__dirname, 'preload.js') }
+        x: 0, y: 0, width: 900, height: 900,
+        webPreferences: {
+            preload: join(__dirname, 'preload.js')
+        }
     })
     browserWindow.on('closed', () => { browserWindow = null });
     browserWindow.on('focus', () => globalShortcut.register('F11',
@@ -43,4 +63,10 @@ async function createWindow() {
     browserWindow.webContents.openDevTools();
 
     await browserWindow.loadFile(join(__dirname, 'index.html'));
+
+    const handleLink = (event, url) => { event.preventDefault(); shell.openExternal(url); };
+    browserWindow.webContents.on('new-window', handleLink);
+    browserWindow.webContents.on('will-navigate', handleLink);
+    browserWindow.webContents.on('will-redirect', handleLink);
+    browserWindow.webContents.on('will-frame-navigate', handleLink);
 }
