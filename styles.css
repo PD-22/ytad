@@ -1,0 +1,59 @@
+body {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: large;
+    padding: 1rem .5rem;
+    background: white;
+    overflow: hidden;
+    max-width: 48rem;
+    margin: auto;
+}
+
+form {
+    display: flex;
+    height: 48px;
+}
+
+input {
+    flex: auto;
+    padding-left: .5rem;
+    padding-right: .5rem;
+    border: 1px solid;
+    border-right: none;
+}
+
+button {
+    margin: 0;
+    border: 1px solid;
+    border-left: none;
+    min-width: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    color: black;
+    border: 1px solid black;
+}
+
+ul {
+    margin-top: .5rem;
+    font-size: small;
+    text-wrap: nowrap;
+}
+
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: none;
+    background: rgba(0, 0, 0, 0.0625);
+}
+
+input:focus-visible {
+    outline: none;
+    background: initial;
+}
+
+a {
+    text-decoration: underline;
+}
