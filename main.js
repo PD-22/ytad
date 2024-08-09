@@ -1,9 +1,7 @@
 const { app, BrowserWindow, ipcMain, globalShortcut, Menu, dialog, shell } = require('electron');
 const ytdl = require('@distube/ytdl-core');
-const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
 const { join } = require('path');
-ffmpeg.setFfmpegPath(ffmpegPath);
+const { createWriteStream } = require('fs');
 
 Menu.setApplicationMenu(null);
 
@@ -27,21 +25,19 @@ app.whenReady().then(async () => {
             title: 'Export',
             defaultPath,
             filters: [{
-                name: 'MP3 Files',
-                extensions: ['mp3']
+                name: 'MP4 Files',
+                extensions: ['mp4']
             }]
         });
         return response.filePath;
     });
 
     ipcMain.handle('start', async (_, link, output) => {
-        await new Promise((resolve, reject) => ffmpeg(
-            ytdl(link, { quality: 'highestaudio', filter: 'audioonly' })
-        )
-            .audioCodec('libmp3lame')
-            .format('mp3')
-            .save(output)
-            .on('end', () => { resolve(); })
+        await new Promise((resolve, reject) => ytdl(link, {
+            quality: 'highestaudio', filter: 'audioonly'
+        })
+            .pipe(createWriteStream(output))
+            .on('finish', () => { resolve(); })
             .on('error', (err) => { reject(err); })
         );
         return output;
