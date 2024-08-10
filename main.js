@@ -41,13 +41,12 @@ app.whenReady().then(async () => {
             .on('finish', () => { resolve(); })
             .on('error', (err) => { reject(err); })
         );
-        return path.dirname(output);
+        return path.dirname(output)
     });
 });
 
 async function createWindow() {
     browserWindow = new BrowserWindow({
-        x: 0, y: 0, width: 900, height: 900,
         webPreferences: {
             preload: join(__dirname, 'preload.js')
         }
@@ -57,7 +56,6 @@ async function createWindow() {
         () => browserWindow.setFullScreen(!browserWindow.isFullScreen())
     ));
     browserWindow.on('blur', () => globalShortcut.unregisterAll());
-    browserWindow.webContents.openDevTools();
 
     await browserWindow.loadFile(join(__dirname, 'index.html'));
 

@@ -4,7 +4,7 @@ const ul = document.getElementsByTagName('ul')[0];
 
 form.addEventListener('submit', async event => {
     event.preventDefault();
-    let link, title, li;
+    let link, li;
     try {
         li = document.createElement('li');
         ul.appendChild(li);
@@ -13,27 +13,24 @@ form.addEventListener('submit', async event => {
         if (typeof link !== 'string' || !link) throw new Error('Invalid link');
         li.textContent = `Link: ${link}\nSearching...`;
 
-        title = await window.api.title(link)
+        const title = await window.api.title(link)
         if (typeof title !== 'string' || !title) throw new Error('Invalid title');
         li.textContent = `Link: ${link}\nTitle: ${title}\nOpening...`;
 
         const output = await window.api.location(title);
-        if (typeof output !== 'string' || !output) throw new Error('Invalid output');
+        if (typeof output !== 'string' || !output) throw new Error('Invalid Output');
         li.textContent = `Link: ${link}\nTitle: ${title}\nOutput: ${output}\nDownloading...`;
 
         const folder = await window.api.start(link, output);
-        li.textContent = `Link: ${link}\nTitle: ${title}\nOutput: ${output}\nFolder: `;
+        if (typeof folder !== 'string' || !folder) throw new Error('Invalid Folder');
+        li.textContent = `Link: ${link}\nTitle: ${title}\nOutput: `;
         const a = document.createElement('a');
-        a.textContent = a.href = folder;
+        a.textContent = output;
+        a.href = folder;
         li.append(a);
     } catch (error) {
-        if (link && title) {
-            li.textContent = `Link: ${link}\nTitle: ${title}\nError`;
-        } else if (link) {
-            li.textContent = `Link: ${link}\nError`;
-        } else {
-            li.textContent = `Error`;
-        }
+        li.textContent = link ? `Link: ${link}\nError` : `Error`;
+        console.error(error);
         throw error;
     }
 });
