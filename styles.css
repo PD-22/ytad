@@ -35,23 +35,30 @@ button {
 }
 
 ul {
+    display: flex;
+    flex-direction: column;
     margin-top: .5rem;
     font-size: small;
     text-wrap: nowrap;
+    gap: .5rem;
+}
+
+li {
+    white-space: pre-wrap;
+    border: 1px solid;
+    line-height: 14px;
+    padding: .25rem .5rem;
 }
 
 *:focus {
     outline: none;
 }
 
-*:focus-visible {
-    outline: none;
+button:focus-visible,
+a:focus-visible,
+button:hover,
+a:hover {
     background: rgba(0, 0, 0, 0.0625);
-}
-
-input:focus-visible {
-    outline: none;
-    background: initial;
 }
 
 a {

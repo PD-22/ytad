@@ -1,42 +1,39 @@
 const form = document.getElementsByTagName('form')[0];
 const input = document.getElementsByTagName('input')[0];
-const list = document.getElementsByTagName('ul')[0];
+const ul = document.getElementsByTagName('ul')[0];
 
 form.addEventListener('submit', async event => {
-    let link
+    event.preventDefault();
+    let link, title, li;
     try {
-        event.preventDefault();
+        li = document.createElement('li');
+        ul.appendChild(li);
+
         link = input.value;
         if (typeof link !== 'string' || !link) throw new Error('Invalid link');
-        log('Opening: ', link)
+        li.textContent = `Link: ${link}\nSearching...`;
 
-        const title = await window.api.title(link)
+        title = await window.api.title(link)
         if (typeof title !== 'string' || !title) throw new Error('Invalid title');
+        li.textContent = `Link: ${link}\nTitle: ${title}\nOpening...`;
 
         const output = await window.api.location(title);
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
+        li.textContent = `Link: ${link}\nTitle: ${title}\nOutput: ${output}\nDownloading...`;
 
-        log(`Downloading: `, link);
-        const result = await window.api.start(link, output);
-        log(`Result: `, result);
+        const folder = await window.api.start(link, output);
+        li.textContent = `Link: ${link}\nTitle: ${title}\nOutput: ${output}\nFolder: `;
+        const a = document.createElement('a');
+        a.textContent = a.href = folder;
+        li.append(a);
     } catch (error) {
-        if (link)
-            log('Error: ', link);
-        else
-            log('Error');
+        if (link && title) {
+            li.textContent = `Link: ${link}\nTitle: ${title}\nError`;
+        } else if (link) {
+            li.textContent = `Link: ${link}\nError`;
+        } else {
+            li.textContent = `Error`;
+        }
         throw error;
     }
 });
-
-function log(message, url) {
-    console.log(message, url);
-    const listItem = document.createElement('li');
-    listItem.textContent = message;
-    if (url) {
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.textContent = url;
-        listItem.append(anchor);
-    }
-    list.appendChild(listItem);
-}

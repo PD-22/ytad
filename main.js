@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, globalShortcut, Menu, dialog, shell } = req
 const ytdl = require('@distube/ytdl-core');
 const { join } = require('path');
 const { createWriteStream } = require('fs');
+const path = require('path');
 
 Menu.setApplicationMenu(null);
 
@@ -40,7 +41,7 @@ app.whenReady().then(async () => {
             .on('finish', () => { resolve(); })
             .on('error', (err) => { reject(err); })
         );
-        return output;
+        return path.dirname(output);
     });
 });
 
