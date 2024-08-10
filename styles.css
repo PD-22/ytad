@@ -3,7 +3,7 @@ body {
     font-size: large;
     padding: 1rem .5rem;
     background: white;
-    overflow: hidden;
+    overflow-x: hidden;
     max-width: 48rem;
     margin: auto;
 }
@@ -48,6 +48,19 @@ li {
     border: 1px solid;
     line-height: 14px;
     padding: .25rem .5rem;
+    display: flex;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+li a {
+    min-width: 48px;
+    margin: -0.25rem -0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-left: 1px solid;
+    background: white;
 }
 
 *:focus {
@@ -59,8 +72,4 @@ a:focus-visible,
 button:hover,
 a:hover {
     background: rgba(0, 0, 0, 0.0625);
-}
-
-a {
-    text-decoration: underline;
 }
