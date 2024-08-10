@@ -1,10 +1,12 @@
 const { app, BrowserWindow, ipcMain, globalShortcut, Menu, dialog, shell } = require('electron');
 const path = require('path');
-const { createWriteStream } = require('fs');
 const ytdl = require('@distube/ytdl-core');
+const ffmpegStatic = require('ffmpeg-static');
+const ffmpeg = require('fluent-ffmpeg');
 
 if (require('electron-squirrel-startup')) app.quit();
 
+ffmpeg.setFfmpegPath(ffmpegStatic);
 Menu.setApplicationMenu(null);
 const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 
@@ -54,21 +56,23 @@ app.whenReady().then(() => {
       title: 'Export',
       defaultPath,
       filters: [{
-        name: 'MP4 Files',
-        extensions: ['mp4']
+        name: 'MP3 Files',
+        extensions: ['mp3']
       }]
     });
     return response.filePath;
   });
 
   ipcMain.handle('start', async (_, link, output) => {
-    await new Promise((resolve, reject) => ytdl(link, {
-      quality: 'highestaudio', filter: 'audioonly'
-    })
-      .pipe(createWriteStream(output))
-      .on('finish', () => { resolve(); })
-      .on('error', (err) => { reject(err); })
-    );
+    await new Promise((resolve, reject) => {
+      ffmpeg()
+        .input(ytdl(link, { quality: 'highestaudio', filter: 'audioonly' }))
+        .audioCodec('libmp3lame')
+        .format('mp3')
+        .on('end', () => { resolve(); })
+        .on('error', (err) => { reject(err); })
+        .save(output);
+    });
     return path.dirname(output)
   });
 });

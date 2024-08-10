@@ -27,7 +27,9 @@
   "author": "PD-22",
   "license": "MIT",
   "dependencies": {
+    "@distube/ytdl-core": "^4.14.4",
     "electron-squirrel-startup": "^1.0.1",
-    "@distube/ytdl-core": "^4.14.4"
+    "ffmpeg-static": "^5.2.0",
+    "fluent-ffmpeg": "^2.1.3"
   }
 }
