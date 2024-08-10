@@ -91,17 +91,17 @@ li a {
     outline: none;
 }
 
-button:hover svg,
-button:focus-visible svg,
-a:focus-visible svg,
-a:hover svg {
-    opacity: 1;
+button svg,
+a svg{
+    opacity: .25;
 }
 
-button svg,
-a svg,
-a:not([href]) svg {
-    opacity: .25;
+button:not(:disabled):hover svg,
+button:not(:disabled):focus-visible svg,
+a[href]:focus-visible svg,
+a[href]:hover svg
+{
+    opacity: 1;
 }
 
 .lucide-loader-circle {

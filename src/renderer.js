@@ -28,6 +28,10 @@ const loadingIcon = `
 </svg>
 `;
 
+const updateButton = () => button.disabled = !input.value;
+updateButton();
+input.addEventListener('input', updateButton);
+
 form.addEventListener('submit', async event => {
     event.preventDefault();
     let link, li, div, a;
@@ -69,7 +73,6 @@ form.addEventListener('submit', async event => {
             a.innerHTML = errorIcon;
             div.textContent = link ? `Link: ${link}\nError` : `Error`;
         });
-        console.error(error);
         throw error;
     }
 });
