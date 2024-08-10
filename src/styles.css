@@ -1,75 +1,119 @@
+:root {
+    --foreground: black;
+    --background: white;
+    --border: rgba(0, 0, 0, .0625);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --foreground: white;
+        --background: black;
+        --border: rgba(255, 255, 255, .0625);
+    }
+}
+
 body {
     font-family: Consolas, 'Courier New', monospace;
     font-size: large;
-    padding: 1rem .5rem;
-    background: white;
-    overflow-x: hidden;
     max-width: 48rem;
     margin: auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--background);
+    color: var(--foreground);
 }
 
 form {
     display: flex;
-    height: 48px;
+    position: fixed;
+    top: 0;
+    max-width: 48rem;
+    width: 100%;
+    border-bottom: 1px solid;
+    border-color: var(--border);
+    background: var(--background)
 }
 
 input {
+    background-color: inherit;
+    height: 48px;
     flex: auto;
-    padding-left: .5rem;
-    padding-right: .5rem;
-    border: 1px solid;
-    border-right: none;
+    padding: 0em .75rem;
 }
 
-button {
+form button {
     margin: 0;
-    border: 1px solid;
-    border-left: none;
     min-width: 48px;
+    height: 48px;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: white;
-    color: black;
-    border: 1px solid black;
 }
 
 ul {
     display: flex;
     flex-direction: column;
-    margin-top: .5rem;
     font-size: small;
-    text-wrap: nowrap;
-    gap: .5rem;
+    flex: auto;
+    padding-top: 48px;
 }
 
 li {
+    text-wrap: nowrap;
     white-space: pre-wrap;
-    border: 1px solid;
     line-height: 14px;
-    padding: .25rem .5rem;
     display: flex;
-    justify-content: space-between;
     overflow: hidden;
+}
+
+li:not(:last-of-type) {
+    border-bottom: 1px solid;
+    border-color: var(--border);
+}
+
+li div {
+    padding: .5rem 0.75rem;
+    flex: auto;
+    display: flex;
+    align-items: center;
 }
 
 li a {
     min-width: 48px;
-    margin: -0.25rem -0.5rem;
+    min-height: 48px;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-left: 1px solid;
-    background: white;
 }
 
 *:focus {
     outline: none;
 }
 
-button:focus-visible,
-a:focus-visible,
-button:hover,
-a:hover {
-    background: rgba(0, 0, 0, 0.0625);
+button:hover svg,
+button:focus-visible svg,
+a:focus-visible svg,
+a:hover svg {
+    opacity: 1;
+}
+
+button svg,
+a svg,
+a:not([href]) svg {
+    opacity: .25;
+}
+
+.lucide-loader-circle {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }

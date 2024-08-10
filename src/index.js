@@ -13,6 +13,8 @@ const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 /** @type {BrowserWindow} */ let browserWindow = null;
 async function createWindow() {
   browserWindow = new BrowserWindow({
+    width: 600, height: 400,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
@@ -28,14 +30,15 @@ async function createWindow() {
     () => browserWindow.setFullScreen(!browserWindow.isFullScreen())
   ));
   browserWindow.on('blur', () => globalShortcut.unregisterAll());
-
-  await browserWindow.loadFile(path.join(__dirname, 'index.html'));
+  browserWindow.webContents.on('did-finish-load', () => { browserWindow.show(); });
 
   const handleLink = (event, url) => { event.preventDefault(); shell.openExternal(url); };
   browserWindow.webContents.on('new-window', handleLink);
   browserWindow.webContents.on('will-navigate', handleLink);
   browserWindow.webContents.on('will-redirect', handleLink);
   browserWindow.webContents.on('will-frame-navigate', handleLink);
+
+  await browserWindow.loadFile(path.join(__dirname, 'index.html'));
 }
 
 app.whenReady().then(() => {
@@ -60,7 +63,10 @@ app.whenReady().then(() => {
         extensions: ['mp3']
       }]
     });
-    return response.filePath;
+    return {
+      location: response.filePath,
+      canceled: response.canceled
+    };
   });
 
   ipcMain.handle('start', async (_, link, output) => {
