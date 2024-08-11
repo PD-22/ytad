@@ -14,6 +14,7 @@ const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 async function createWindow() {
   browserWindow = new BrowserWindow({
     width: 600, height: 400,
+    icon: path.join(__dirname, 'icon.ico'),
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')

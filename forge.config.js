@@ -1,6 +1,8 @@
 module.exports = {
   packagerConfig: {
     asar: false,
+    name: 'Youtube Audio Downloader',
+    icon: 'src/icon.ico',
     extraResource: [
       'node_modules/ffmpeg-static/ffmpeg.exe'
     ]
@@ -9,7 +11,9 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        setupIcon: 'src/icon.ico'
+      }
     },
   ],
   plugins: [

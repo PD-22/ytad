@@ -78,6 +78,7 @@ form.addEventListener('submit', async e => {
         if (!link) return li.remove();
         try {
             follow(() => {
+                div.textContent += `\nError`;
                 const remove = document.createElement('button');
                 remove.type = 'button';
                 remove.innerHTML = xIcon;
@@ -86,9 +87,9 @@ form.addEventListener('submit', async e => {
             });
         } catch (error) {
             li.remove();
-            throw error;
+            console.error(error);
         }
-        throw error;
+        console.error(error);
     }
 });
 
