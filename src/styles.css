@@ -2,6 +2,7 @@
     --foreground: black;
     --background: white;
     --border: rgba(0, 0, 0, .0625);
+    --opaque: rgba(0, 0, 0, .5);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -9,6 +10,7 @@
         --foreground: white;
         --background: black;
         --border: rgba(255, 255, 255, .0625);
+        --opaque: rgba(255, 255, 255, .5);
     }
 }
 
@@ -39,7 +41,7 @@ input {
     background-color: inherit;
     height: 48px;
     flex: auto;
-    padding: 0em .75rem;
+    padding-left: .75rem;
 }
 
 form button {
@@ -79,6 +81,19 @@ li div {
     flex: auto;
 }
 
+li div:not(:last-child) {
+    padding-right: 0;
+}
+
+li div span {
+    opacity: .5;
+}
+
+a:hover,
+a:focus-visible {
+    text-decoration: underline;
+}
+
 li>a,
 li button {
     min-width: 48px;
@@ -86,19 +101,6 @@ li button {
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-li>div>a {
-    opacity: .5;
-}
-
-li>div>a:focus-visible,
-li>div>a:hover {
-    opacity: 1;
-}
-
-*:focus {
-    outline: none;
 }
 
 button svg,
@@ -109,8 +111,14 @@ a svg {
 button:not(:disabled):hover svg,
 button:not(:disabled):focus-visible svg,
 a[href]:focus-visible svg,
-a[href]:hover svg {
+a[href]:hover svg,
+li>div>a:focus-visible,
+li>div>a:hover {
     opacity: 1;
+}
+
+*:focus {
+    outline: none;
 }
 
 .lucide-loader-circle {

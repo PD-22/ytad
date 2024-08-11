@@ -35,7 +35,7 @@ const input = document.getElementsByTagName('input')[0];
 const button = document.getElementsByTagName('button')[0];
 const ul = document.getElementsByTagName('ul')[0];
 
-const updateButton = () => button.disabled = !input.value;
+const updateButton = () => button.disabled = !input.value.trim();
 updateButton();
 input.addEventListener('input', updateButton);
 
@@ -52,25 +52,32 @@ form.addEventListener('submit', async e => {
             li.appendChild(div);
             li.appendChild(a);
             if (typeof link !== 'string' || !link) return li.remove();
-            div.append('Link: ')
-            {
-                const a = document.createElement('a');
-                a.textContent = a.href = link;
-                div.appendChild(a);
-            }
+            const span = document.createElement('span');
+            span.textContent = 'Link: ';
+            div.appendChild(span);
+            const a2 = document.createElement('a');
+            a2.textContent = a2.href = link;
+            div.appendChild(a2);
             a.innerHTML = loadingIcon;
         });
 
         const title = await window.api.title(link);
         if (typeof title !== 'string' || !title) throw new Error('Invalid title');
         follow(() => {
-            div.prepend(`Title: "${title}"\n`);
+            div.append('\n');
+            const span = document.createElement('span');
+            span.textContent = 'Title: ';
+            div.appendChild(span);
+            div.append(title);
         });
 
         const location = await window.api.location(title);
         if (typeof location !== 'string' || !location) throw new Error('Invalid Output');
         follow(() => {
-            div.append('\nLocation: ');
+            div.append('\n');
+            const span = document.createElement('span');
+            span.textContent = 'Location: ';
+            div.appendChild(span);
             {
                 const a = document.createElement('a');
                 a.textContent = location;
