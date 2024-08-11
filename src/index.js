@@ -63,10 +63,7 @@ app.whenReady().then(() => {
         extensions: ['mp3']
       }]
     });
-    return {
-      location: response.filePath,
-      canceled: response.canceled
-    };
+    return response.filePath;
   });
 
   ipcMain.handle('start', async (_, link, output) => {

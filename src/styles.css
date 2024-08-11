@@ -79,7 +79,8 @@ li div {
     align-items: center;
 }
 
-li a {
+li a,
+li button {
     min-width: 48px;
     min-height: 48px;
     display: flex;
@@ -92,15 +93,14 @@ li a {
 }
 
 button svg,
-a svg{
+a svg {
     opacity: .25;
 }
 
 button:not(:disabled):hover svg,
 button:not(:disabled):focus-visible svg,
 a[href]:focus-visible svg,
-a[href]:hover svg
-{
+a[href]:hover svg {
     opacity: 1;
 }
 
