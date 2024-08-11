@@ -39,6 +39,12 @@ async function createWindow() {
   browserWindow.webContents.on('will-redirect', handleLink);
   browserWindow.webContents.on('will-frame-navigate', handleLink);
 
+  browserWindow.webContents.on('context-menu', (_) => {
+    const roles = ['cut', 'copy', 'paste', 'delete'];
+    const template = roles.map(role => ({ role }));
+    Menu.buildFromTemplate(template).popup(browserWindow);
+  });
+
   await browserWindow.loadFile(path.join(__dirname, 'index.html'));
 }
 
