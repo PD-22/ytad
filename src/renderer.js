@@ -22,6 +22,14 @@ const loadingIcon = `
 </svg>
 `;
 
+const xIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+</svg>
+`;
+
 const form = document.getElementsByTagName('form')[0];
 const input = document.getElementsByTagName('input')[0];
 const button = document.getElementsByTagName('button')[0];
@@ -81,15 +89,23 @@ async function processItem(li, title, location) {
         if (!link) return li.remove();
         try {
             follow(() => {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.innerHTML = refreshIcon;
-                button.onclick = () => {
+                a.remove();
+
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.innerHTML = refreshIcon;
+                retry.onclick = () => {
                     const newItem = createItem();
                     li.replaceWith(newItem);
                     processItem(newItem, title, location);
                 };
-                a.replaceWith(button);
+                li.appendChild(retry);
+
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.innerHTML = xIcon;
+                remove.onclick = () => { li.remove(); };
+                li.appendChild(remove);
             })
         } catch (error) {
             li.remove();
