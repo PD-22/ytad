@@ -39,41 +39,30 @@ const updateButton = () => button.disabled = !input.value;
 updateButton();
 input.addEventListener('input', updateButton);
 
-form.addEventListener('submit', e => {
+form.addEventListener('submit', async e => {
     e.preventDefault();
-    const li = createItem();
-    processItem(li);
-});
-
-function createItem() {
     const li = document.createElement('li');
     const div = document.createElement('div');
     const a = document.createElement('a');
-    ul.appendChild(li);
-    li.appendChild(div);
-    li.appendChild(a);
-    return li;
-}
+    const link = input.value;
 
-async function processItem(li, title, location) {
-    let div, a, link;
     try {
-        link = input.value
-        div = li.getElementsByTagName('div')[0];
-        a = li.getElementsByTagName('a')[0];
-        if (typeof link !== 'string' || !link) throw new Error('Invalid link');
         follow(() => {
+            ul.appendChild(li);
+            li.appendChild(div);
+            li.appendChild(a);
+            if (typeof link !== 'string' || !link) return li.remove();
             div.textContent = `Link: ${link}`;
             a.innerHTML = loadingIcon;
         });
 
-        title ??= await window.api.title(link);
+        const title = await window.api.title(link);
         if (typeof title !== 'string' || !title) throw new Error('Invalid title');
         follow(() => {
             div.textContent += `\nTitle: ${title}`;
         });
 
-        location ??= await window.api.location(title);
+        const location = await window.api.location(title);
         if (typeof location !== 'string' || !location) throw new Error('Invalid Output');
         follow(() => {
             div.textContent += `\nLocation: ${location}`;
@@ -89,37 +78,32 @@ async function processItem(li, title, location) {
         if (!link) return li.remove();
         try {
             follow(() => {
-                a.remove();
-
-                const retry = document.createElement('button');
-                retry.type = 'button';
-                retry.innerHTML = refreshIcon;
-                retry.onclick = () => {
-                    const newItem = createItem();
-                    li.replaceWith(newItem);
-                    processItem(newItem, title, location);
-                };
-                li.appendChild(retry);
-
                 const remove = document.createElement('button');
                 remove.type = 'button';
                 remove.innerHTML = xIcon;
                 remove.onclick = () => { li.remove(); };
-                li.appendChild(remove);
-            })
+                a.replaceWith(remove);
+            });
         } catch (error) {
             li.remove();
             throw error;
         }
         throw error;
     }
-}
+});
 
 function follow(callbackfn) {
     const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
     const isBottom = (window.scrollY || scrollTop) + clientHeight >= scrollHeight;
-    callbackfn();
-    if (isBottom) window.scrollTo({
+    try {
+        callbackfn();
+    } finally {
+        if (isBottom) scrollBottom();
+    }
+}
+
+function scrollBottom() {
+    window.scrollTo({
         top: document.documentElement.scrollHeight,
         behavior: 'smooth'
     });
