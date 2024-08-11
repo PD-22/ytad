@@ -52,20 +52,31 @@ form.addEventListener('submit', async e => {
             li.appendChild(div);
             li.appendChild(a);
             if (typeof link !== 'string' || !link) return li.remove();
-            div.textContent = `Link: ${link}`;
+            div.append('Link: ')
+            {
+                const a = document.createElement('a');
+                a.textContent = a.href = link;
+                div.appendChild(a);
+            }
             a.innerHTML = loadingIcon;
         });
 
         const title = await window.api.title(link);
         if (typeof title !== 'string' || !title) throw new Error('Invalid title');
         follow(() => {
-            div.textContent += `\nTitle: ${title}`;
+            div.prepend(`Title: "${title}"\n`);
         });
 
         const location = await window.api.location(title);
         if (typeof location !== 'string' || !location) throw new Error('Invalid Output');
         follow(() => {
-            div.textContent += `\nLocation: ${location}`;
+            div.append('\nLocation: ');
+            {
+                const a = document.createElement('a');
+                a.textContent = location;
+                a.href = location.substring(0, location.lastIndexOf('\\')) || location;
+                div.appendChild(a);
+            }
         });
 
         const folder = await window.api.start(link, location);
@@ -78,7 +89,7 @@ form.addEventListener('submit', async e => {
         if (!link) return li.remove();
         try {
             follow(() => {
-                div.textContent += `\nError`;
+                div.append('\nError');
                 const remove = document.createElement('button');
                 remove.type = 'button';
                 remove.innerHTML = xIcon;

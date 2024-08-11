@@ -74,12 +74,12 @@ li:not(:last-of-type) {
 
 li div {
     padding: .5rem 0.75rem;
+    margin-top: auto;
+    margin-bottom: auto;
     flex: auto;
-    display: flex;
-    align-items: center;
 }
 
-li a,
+li>a,
 li button {
     min-width: 48px;
     min-height: 48px;
@@ -88,13 +88,22 @@ li button {
     align-items: center;
 }
 
+li>div>a {
+    opacity: .5;
+}
+
+li>div>a:focus-visible,
+li>div>a:hover {
+    opacity: 1;
+}
+
 *:focus {
     outline: none;
 }
 
 button svg,
 a svg {
-    opacity: .25;
+    opacity: .5;
 }
 
 button:not(:disabled):hover svg,
