@@ -34,24 +34,56 @@ const form = document.getElementsByTagName('form')[0];
 const input = document.getElementsByTagName('input')[0];
 const button = document.getElementsByTagName('button')[0];
 const ul = document.getElementsByTagName('ul')[0];
+const pre = document.getElementsByTagName('pre')[0];
+const onInputTimeoutListeners = new Set();
+let currentTitle, timeout, cancelFetch;
+input.addEventListener('input', onInput);
+form.addEventListener('submit', e => { e.preventDefault(); processLink(); });
 
-const updateButton = () => button.disabled = !input.value.trim();
-updateButton();
-input.addEventListener('input', updateButton);
+function onInput() {
+    clearTimeout(timeout);
+    cancelFetch?.();
+    currentTitle = undefined;
+    if (!input.value) return;
+    timeout = setTimeout(onInputTimeout, 300);
+}
 
-form.addEventListener('submit', async e => {
-    e.preventDefault();
+async function onInputTimeout() {
+    const link = input.value;
+    if (!link) return;
+    try {
+        timeout = undefined;
+        const state = { cancel: false };
+        cancelFetch = () => state.cancel = true;
+        const newTitle = await window.api.title(link);
+        if (typeof newTitle !== 'string' || !newTitle) throw new Error('Invalid title response');
+        if (state.cancel) return;
+
+        currentTitle = newTitle;
+        onInputTimeoutListeners.forEach(x => x.resolve(newTitle));
+        return newTitle;
+    } catch (error) {
+        onInputTimeoutListeners.forEach(x => x.reject());
+        currentTitle = undefined;
+    } finally {
+        cancelFetch = undefined;
+        onInputTimeoutListeners.clear();
+    }
+}
+
+async function processLink() {
+    const link = input.value;
+    if (typeof link !== 'string' || !link) return;
+
     const li = document.createElement('li');
     const div = document.createElement('div');
     const a = document.createElement('a');
-    const link = input.value;
 
     try {
         follow(() => {
             ul.appendChild(li);
             li.appendChild(div);
             li.appendChild(a);
-            if (typeof link !== 'string' || !link) return li.remove();
             const span = document.createElement('span');
             span.textContent = 'Link: ';
             div.appendChild(span);
@@ -61,8 +93,8 @@ form.addEventListener('submit', async e => {
             a.innerHTML = loadingIcon;
         });
 
-        const title = await window.api.title(link);
-        if (typeof title !== 'string' || !title) throw new Error('Invalid title');
+        const title = await getProcessLinkTitle();
+        if (typeof title !== 'string' || !title) throw new Error('Invalid title')
         follow(() => {
             div.append('\n');
             const span = document.createElement('span');
@@ -109,7 +141,30 @@ form.addEventListener('submit', async e => {
         }
         console.error(error);
     }
-});
+}
+
+async function getProcessLinkTitle() {
+    if (timeout) {
+        // waiting for input to stop
+        // stop waiting and trigger fetch immediately
+        clearTimeout(timeout);
+        return await onInputTimeout();
+    } else if (cancelFetch) {
+        // already fetching title
+        // listen for ongoing fetch
+        return await new Promise((resolve, reject) => {
+            onInputTimeoutListeners.add({ resolve, reject });
+        });
+    } else if (currentTitle) {
+        // title for is already fetched
+        // just use prepared title
+        return currentTitle;
+    } else {
+        // no title available
+        // try to fetch title
+        return await onInputTimeout();
+    }
+}
 
 function follow(callbackfn) {
     const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
