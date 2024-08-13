@@ -1,8 +1,9 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, Menu, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell } = require('electron');
 const path = require('path');
 const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
+const { existsSync } = require('fs');
 
 if (require('electron-squirrel-startup')) app.quit();
 
@@ -61,19 +62,14 @@ app.whenReady().then(() => {
     return info.videoDetails.title;
   });
 
-  ipcMain.handle('location', async (_, defaultPath) => {
-    const response = await dialog.showSaveDialog({
-      title: 'Export',
-      defaultPath,
-      filters: [{
-        name: 'MP3 Files',
-        extensions: ['mp3']
-      }]
-    });
-    return response.filePath;
+  ipcMain.handle('location', (_, title) => {
+    const dir = app.getPath('downloads');
+    const file = title.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
+    return path.join(dir, `${file}.mp3`);
   });
 
   ipcMain.handle('start', async (_, link, output) => {
+    output = uniquePath(output);
     await new Promise((resolve, reject) => {
       ffmpeg()
         .input(ytdl(link, { quality: 'highestaudio', filter: 'audioonly' }))
@@ -83,8 +79,24 @@ app.whenReady().then(() => {
         .on('error', (err) => { reject(err); })
         .save(output);
     });
-    return path.dirname(output)
+    return {
+      output: output,
+      dirname: path.dirname(output)
+    }
   });
 });
+
+function uniquePath(filePath) {
+  let counter = 1;
+  const dirName = path.dirname(filePath);
+  const baseName = path.basename(filePath, path.extname(filePath));
+  const extension = path.extname(filePath);
+
+  while (existsSync(filePath)) filePath = path
+    .join(dirName, `${baseName} (${counter++})${extension}`);
+
+  return filePath;
+}
+
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
