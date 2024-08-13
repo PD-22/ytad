@@ -37,6 +37,7 @@ const ul = document.getElementsByTagName('ul')[0];
 
 form.addEventListener('submit', e => {
     e.preventDefault();
+    if (!input.value.trim()) return;
     processLink();
 });
 form.addEventListener('keyup', e => {
@@ -65,7 +66,8 @@ async function processLink() {
             li.appendChild(a2);
             li.appendChild(a);
             a2.className = 'info';
-            a2.textContent = a2.href = link;
+            a2.title = a2.textContent = a2.href = link;
+            a2.classList.add('opaque')
             a.className = 'btn';
             a.innerHTML = loadingIcon;
         });
@@ -73,6 +75,7 @@ async function processLink() {
         const title = await window.api.title(link);
         if (typeof title !== 'string' || !title) throw new Error('Invalid title')
         follow(() => {
+            a2.classList.remove('opaque')
             a2.textContent = title;
         });
 
@@ -83,7 +86,7 @@ async function processLink() {
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
         follow(() => {
             a.innerHTML = externalIcon;
-            a.href = output;
+            a.title = a.href = output;
         });
     } catch (error) {
         if (!link) return li.remove();
@@ -95,6 +98,7 @@ async function processLink() {
                 remove.innerHTML = xIcon;
                 remove.onclick = () => { li.remove(); };
                 a.replaceWith(remove);
+                a2.classList.toggle('opaque')
             });
         } catch (error) {
             li.remove();

@@ -99,6 +99,7 @@ a:focus-visible {
     align-items: center;
 }
 
+.opaque,
 button svg,
 a svg {
     opacity: .5;
