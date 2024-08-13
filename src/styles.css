@@ -29,10 +29,10 @@ body {
 form {
     display: flex;
     position: fixed;
-    top: 0;
+    bottom: 0;
     max-width: 48rem;
     width: 100%;
-    border-bottom: 1px solid;
+    border-top: 1px solid;
     border-color: var(--border);
     background: var(--background)
 }
@@ -59,7 +59,7 @@ ul {
     flex-direction: column;
     font-size: small;
     flex: auto;
-    padding-top: 48px;
+    padding-bottom: 48px;
 }
 
 li {
@@ -76,7 +76,7 @@ li:not(:last-of-type) {
 }
 
 li .info {
-    padding: .5rem 0.75rem;
+    padding: .25rem 0.75rem;
     margin-top: auto;
     margin-bottom: auto;
     flex: auto;
@@ -103,6 +103,11 @@ a:focus-visible {
 button svg,
 a svg {
     opacity: .5;
+}
+
+li .btn {
+    min-width: 36px;
+    min-height: 36px;
 }
 
 li button svg,

@@ -65,9 +65,8 @@ async function processLink() {
             ul.appendChild(li);
             li.appendChild(a2);
             li.appendChild(a);
-            a2.className = 'info';
+            a2.className = 'info opaque';
             a2.title = a2.textContent = a2.href = link;
-            a2.classList.add('opaque')
             a.className = 'btn';
             a.innerHTML = loadingIcon;
         });
@@ -81,6 +80,7 @@ async function processLink() {
 
         const location = await window.api.location(title);
         if (typeof location !== 'string' || !location) throw new Error('Invalid location');
+        a.title = location;
 
         const output = await window.api.start(link, location);
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
@@ -98,7 +98,7 @@ async function processLink() {
                 remove.innerHTML = xIcon;
                 remove.onclick = () => { li.remove(); };
                 a.replaceWith(remove);
-                a2.classList.toggle('opaque')
+                a2.classList.remove('opaque');
             });
         } catch (error) {
             li.remove();

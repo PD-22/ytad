@@ -72,7 +72,7 @@ app.whenReady().then(() => {
   ipcMain.handle('location', (_, title) => {
     const dir = app.getPath('downloads');
     const file = title.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
-    return path.join(dir, `${file}.mp3`);
+    return uniquePath(path.join(dir, `${file}.mp3`));
   });
 
   ipcMain.handle('start', async (_, link, output) => {
