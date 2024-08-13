@@ -35,6 +35,7 @@ const input = document.getElementsByTagName('input')[0];
 const ul = document.getElementsByTagName('ul')[0];
 
 form.addEventListener('submit', e => { e.preventDefault(); processLink(); });
+input.addEventListener('paste', () => setTimeout(processLink));
 
 async function processLink() {
     const link = input.value;
@@ -82,13 +83,12 @@ async function processLink() {
             div.appendChild(a2);
         });
 
-        const { output, dirname } = await window.api.start(link, location);
+        const output = await window.api.start(link, location);
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
-        if (typeof dirname !== 'string' || !dirname) throw new Error('Invalid dirname');
         follow(() => {
             a2.textContent = output;
             a.innerHTML = externalIcon;
-            a.href = dirname;
+            a.href = output;
         });
     } catch (error) {
         if (!link) return li.remove();

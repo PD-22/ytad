@@ -34,7 +34,14 @@ async function createWindow() {
   browserWindow.on('blur', () => globalShortcut.unregisterAll());
   browserWindow.webContents.on('did-finish-load', () => { browserWindow.show(); });
 
-  const handleLink = (event, url) => { event.preventDefault(); shell.openExternal(url); };
+  const handleLink = (event, url) => {
+    event.preventDefault();
+    if (/^file:\/\/\/.*\.mp3$/.test(url)) {
+      shell.showItemInFolder(url);
+    } else {
+      shell.openExternal(url);
+    }
+  };
   browserWindow.webContents.on('new-window', handleLink);
   browserWindow.webContents.on('will-navigate', handleLink);
   browserWindow.webContents.on('will-redirect', handleLink);
@@ -79,10 +86,7 @@ app.whenReady().then(() => {
         .on('error', (err) => { reject(err); })
         .save(output);
     });
-    return {
-      output: output,
-      dirname: path.dirname(output)
-    }
+    return output;
   });
 });
 
