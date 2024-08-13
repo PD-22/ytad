@@ -82,17 +82,26 @@ app.whenReady().then(() => {
     return uniquePath(path.join(dir, `${file}.mp3`));
   });
 
-  ipcMain.handle('start', async (_, link, output) => {
+  ipcMain.handle('start', async (_, id, link, output) => {
     output = uniquePath(output);
-    await new Promise((resolve, reject) => {
-      ffmpeg()
-        .input(ytdl(link, { quality: 'highestaudio', filter: 'audioonly' }))
-        .audioCodec('libmp3lame')
-        .format('mp3')
-        .on('end', () => { resolve(); })
-        .on('error', (err) => { reject(err); })
-        .save(output);
-    });
+
+    const info = await ytdl.getInfo(link);
+    const format = ytdl.chooseFormat(info.formats,
+      { quality: 'highestaudio', filter: 'audioonly' }
+    );
+
+    await new Promise((resolve, reject) => ffmpeg()
+      .input(ytdl.downloadFromInfo(info, { format }))
+      .audioCodec('libmp3lame')
+      .format('mp3')
+      .on('progress', x => {
+        const percent = x.targetSize / format.contentLength * 1000;
+        browserWindow.webContents.send(`progress-${id}`, percent);
+      })
+      .on('end', () => { resolve(); })
+      .on('error', (err) => { reject(err); })
+      .save(output)
+    );
     return output;
   });
 });

@@ -59,12 +59,16 @@ async function processLink() {
     const li = document.createElement('li');
     const a = document.createElement('a');
     const a2 = document.createElement('a');
+    const pre = document.createElement('pre');
+    let setPercent = p => pre.textContent = Math.floor(p * 100) + '%';
 
     try {
         follow(() => {
             ul.appendChild(li);
             li.appendChild(a2);
+            li.appendChild(pre);
             li.appendChild(a);
+            pre.className='opaque';
             a2.className = 'info opaque';
             a2.title = a2.textContent = a2.href = link;
             a.className = 'btn';
@@ -82,8 +86,12 @@ async function processLink() {
         if (typeof location !== 'string' || !location) throw new Error('Invalid location');
         a.title = location;
 
-        const output = await window.api.start(link, location);
+        const id = Math.random();
+        setPercent(0);
+        window.api.onProgress(id, p => setPercent?.(p));
+        const output = await window.api.start(id, link, location);
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
+        setPercent?.(1);
         follow(() => {
             a.innerHTML = externalIcon;
             a.title = a.href = output;
@@ -105,6 +113,8 @@ async function processLink() {
             console.error(error);
         }
         console.error(error);
+    } finally {
+        setPercent = undefined;
     }
 }
 
