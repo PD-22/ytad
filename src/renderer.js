@@ -42,51 +42,32 @@ async function processLink() {
     if (typeof link !== 'string' || !link) return;
 
     const li = document.createElement('li');
-    const div = document.createElement('div');
     const a = document.createElement('a');
+    const a2 = document.createElement('a');
 
     try {
         follow(() => {
             ul.appendChild(li);
-            li.appendChild(div);
+            li.appendChild(a2);
             li.appendChild(a);
-            const span = document.createElement('span');
-            span.textContent = 'Link: ';
-            div.appendChild(span);
-            const a2 = document.createElement('a');
+            a2.className = 'info';
             a2.textContent = a2.href = link;
-            div.appendChild(a2);
+            a.className = 'btn';
             a.innerHTML = loadingIcon;
         });
 
         const title = await window.api.title(link);
         if (typeof title !== 'string' || !title) throw new Error('Invalid title')
         follow(() => {
-            div.append('\n');
-            const span = document.createElement('span');
-            span.textContent = 'Title: ';
-            div.appendChild(span);
-            div.append(title);
+            a2.textContent = title;
         });
 
         const location = await window.api.location(title);
         if (typeof location !== 'string' || !location) throw new Error('Invalid location');
-        let a2;
-        follow(() => {
-            div.append('\n');
-            const span = document.createElement('span');
-            span.textContent = 'Location: ';
-            div.appendChild(span);
-            a2 = document.createElement('a');
-            a2.textContent = location;
-            a2.href = location.substring(0, location.lastIndexOf('\\')) || location;
-            div.appendChild(a2);
-        });
 
         const output = await window.api.start(link, location);
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
         follow(() => {
-            a2.textContent = output;
             a.innerHTML = externalIcon;
             a.href = output;
         });
@@ -94,8 +75,8 @@ async function processLink() {
         if (!link) return li.remove();
         try {
             follow(() => {
-                div.append('\nError');
                 const remove = document.createElement('button');
+                remove.className = 'btn';
                 remove.type = 'button';
                 remove.innerHTML = xIcon;
                 remove.onclick = () => { li.remove(); };

@@ -42,6 +42,7 @@ input {
     height: 48px;
     flex: auto;
     padding-left: .75rem;
+    min-width: 0;
 }
 
 form button {
@@ -74,19 +75,15 @@ li:not(:last-of-type) {
     border-color: var(--border);
 }
 
-li div {
+li .info {
     padding: .5rem 0.75rem;
     margin-top: auto;
     margin-bottom: auto;
     flex: auto;
 }
 
-li div:not(:last-child) {
+li .info:not(:last-child) {
     padding-right: 0;
-}
-
-li div span {
-    opacity: .5;
 }
 
 a:hover,
@@ -94,8 +91,7 @@ a:focus-visible {
     text-decoration: underline;
 }
 
-li>a,
-li button {
+.btn {
     min-width: 48px;
     min-height: 48px;
     display: flex;
@@ -108,12 +104,18 @@ a svg {
     opacity: .5;
 }
 
+li button svg,
+li a svg {
+    width: 18px;
+    height: 18px;
+}
+
 button:not(:disabled):hover svg,
 button:not(:disabled):focus-visible svg,
 a[href]:focus-visible svg,
 a[href]:hover svg,
-li>div>a:focus-visible,
-li>div>a:hover {
+li>a.info:focus-visible,
+li>a.info:hover {
     opacity: 1;
 }
 
