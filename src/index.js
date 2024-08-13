@@ -61,8 +61,15 @@ app.whenReady().then(() => {
 
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 
-  app.on('browser-window-focus', () => globalShortcut.register("CommandOrControl+R", () => { app.relaunch(); app.exit(); }));
-  app.on('browser-window-blur', () => globalShortcut.unregister("CommandOrControl+R"));
+  app.on('browser-window-focus', () => {
+    const reload = () => { app.relaunch(); app.exit(); };
+    globalShortcut.register("F5", reload)
+    globalShortcut.register("CommandOrControl+R", reload)
+  });
+  app.on('browser-window-blur', () => {
+    globalShortcut.unregister("F5");
+    globalShortcut.unregister("CommandOrControl+R");
+  });
 
   ipcMain.handle('title', async (_, link) => {
     const info = await ytdl.getInfo(link);
