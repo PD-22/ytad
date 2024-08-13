@@ -31,10 +31,24 @@ const xIcon = `
 `;
 
 const form = document.getElementsByTagName('form')[0];
-const input = document.getElementsByTagName('input')[0];
+const input = form.getElementsByTagName('input')[0];
+const button = form.getElementsByTagName('button')[0];
 const ul = document.getElementsByTagName('ul')[0];
 
-form.addEventListener('submit', e => { e.preventDefault(); processLink(); });
+form.addEventListener('submit', e => {
+    e.preventDefault();
+    processLink();
+});
+form.addEventListener('keyup', e => {
+    const tag = e.target.tagName;
+    if (e.code === "Enter" && (tag === "INPUT" || tag === "BUTTON"))
+        form.requestSubmit();
+});
+form.addEventListener('keydown', e => {
+    const tag = e.target.tagName;
+    if (e.code === "Enter" && (tag === "INPUT" || tag === "BUTTON"))
+        e.preventDefault();
+});
 input.addEventListener('paste', () => setTimeout(processLink));
 
 async function processLink() {
