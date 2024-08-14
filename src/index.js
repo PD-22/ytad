@@ -90,30 +90,39 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('start', async (_, id, link, output) => {
-    output = uniquePath(output);
-
-    const info = await ytdl.getInfo(link);
-    const format = ytdl.chooseFormat(info.formats,
-      { quality: 'highestaudio', filter: 'audioonly' }
-    );
-
-    const command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
-    const killListener = () => { command.kill(); };
+    let command, aborted;
+    const killListener = () => {
+      command?.kill();
+      aborted = true;
+    };
     ipcMain.once(`kill-${id}`, killListener);
 
-    await new Promise((resolve, reject) => command
-      .audioCodec('libmp3lame')
-      .format('mp3')
-      .on('progress', x => {
-        const percent = x.targetSize / format.contentLength * 1000;
-        browserWindow.webContents.send(`progress-${id}`, percent);
-      })
-      .on('end', () => { resolve(); })
-      .on('error', (err) => { reject(err); })
-      .save(output)
-    );
-    ipcMain.removeListener(`kill-${id}`, killListener);
-    return output;
+    try {
+      const info = await ytdl.getInfo(link);
+      if (aborted) return console.log('command aborted');
+
+      const format = ytdl.chooseFormat(info.formats,
+        { quality: 'highestaudio', filter: 'audioonly' }
+      );
+
+      command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
+      output = uniquePath(output);
+
+      await new Promise((resolve, reject) => command
+        .audioCodec('libmp3lame')
+        .format('mp3')
+        .on('progress', x => {
+          const percent = x.targetSize * 1000 / format.contentLength;
+          browserWindow.webContents.send(`progress-${id}`, percent);
+        })
+        .on('end', () => { resolve(); })
+        .on('error', err => { reject(err); })
+        .save(output)
+      );
+      return output;
+    } finally {
+      ipcMain.removeListener(`kill-${id}`, killListener);
+    }
   });
 });
 
@@ -128,6 +137,5 @@ function uniquePath(filePath) {
 
   return filePath;
 }
-
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

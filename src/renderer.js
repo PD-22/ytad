@@ -22,7 +22,7 @@ const loadingIcon = `
 </svg>
 `;
 
-function progressIcon(percent, s = 24, r = 9, o = 1 / 2 ** 3) {
+function progressIcon(percent, s = 24, r = 9, o = .125) {
     percent = Math.max(0, Math.min(percent, 1));
     const length = 2 * Math.PI * r;
     const dashoffset = length * (1 - percent);
@@ -108,7 +108,7 @@ async function processLink() {
     const li = document.createElement('li');
     const a = document.createElement('a');
     const a2 = document.createElement('a');
-    let kill, container;
+    let kill, container, reject;
     let setPercent = p => {
         a.classList.add('no-spin');
         a.innerHTML = progressIcon(p);
@@ -151,31 +151,35 @@ async function processLink() {
             kill.innerHTML = xIcon;
             kill.className = 'btn over';
             kill.type = 'button';
-            kill.addEventListener('click', (() => window.api.kill(id)));
+            kill.onclick = () => {
+                window.api.kill(id);
+                reject?.('loading aborted');
+            };
             container.appendChild(kill);
         });
 
-        const output = await window.api.start(id, link, location);
+        const output = await Promise.race([
+            new Promise((_, f) => reject = f),
+            window.api.start(id, link, location)
+        ]);
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
         follow(() => {
+            kill?.remove();
             a.innerHTML = externalIcon;
             a.title = a.href = output;
         });
     } catch (error) {
         if (!link) return li.remove();
         follow(() => {
-            const remove = document.createElement('button');
-            remove.className = 'btn';
-            remove.type = 'button';
-            remove.innerHTML = minusIcon;
-            remove.onclick = () => { li.remove(); };
-            a.replaceWith(remove);
+            kill.className = 'btn';
+            kill.innerHTML = minusIcon;
+            kill.onclick = () => { li.remove(); };
+            a.remove();
             a2.classList.remove('opaque');
         });
         console.error(error);
     } finally {
-        kill?.remove();
-        container.replaceWith(...container.children);
+        container?.replaceWith(...container.children);
     }
 }
 

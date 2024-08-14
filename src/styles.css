@@ -142,12 +142,21 @@ li>a.info:hover {
 }
 
 .container:focus-within .under,
-.container:hover .under {
-    opacity: .5;
+.container:hover .under,
+li:hover .container .under {
+    opacity: .33;
+}
+
+.container:focus-within .under svg,
+.container:hover .under svg,
+li:hover .container .under svg {
+    width: 30px;
+    height: 30px;
 }
 
 .container:focus-within .over,
-.container:hover .over {
+.container:hover .over,
+li:hover .container .over {
     opacity: 1;
 }
 
@@ -155,6 +164,8 @@ li>a.info:hover {
     position: absolute;
     top: 0;
     opacity: 0;
+    width: 18px;
+    height: 18px;
 }
 
 @keyframes spin {
