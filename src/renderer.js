@@ -67,6 +67,13 @@ const xIcon = `
 </svg>
 `;
 
+const minusIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus">
+    <path d="M5 12h14" />
+</svg>
+`;
+
 const form = document.getElementsByTagName('form')[0];
 const input = form.getElementsByTagName('input')[0];
 const button = form.getElementsByTagName('button')[0];
@@ -101,6 +108,7 @@ async function processLink() {
     const li = document.createElement('li');
     const a = document.createElement('a');
     const a2 = document.createElement('a');
+    let kill, container;
     let setPercent = p => {
         a.classList.add('no-spin');
         a.innerHTML = progressIcon(p);
@@ -128,10 +136,25 @@ async function processLink() {
 
         const location = await window.api.location(title);
         if (typeof location !== 'string' || !location) throw new Error('Invalid location');
-        a.title = location;
 
         const id = Math.random();
         window.api.onProgress(id, p => setPercent?.(p));
+
+        follow(() => {
+            container = document.createElement('div');
+            a.title = location;
+            container.className = 'container';
+            a.replaceWith(container);
+            container.append(a)
+            a.classList.add('under');
+            kill = document.createElement('button');
+            kill.innerHTML = xIcon;
+            kill.className = 'btn over';
+            kill.type = 'button';
+            kill.addEventListener('click', (() => window.api.kill(id)));
+            container.appendChild(kill);
+        });
+
         const output = await window.api.start(id, link, location);
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
         follow(() => {
@@ -140,23 +163,19 @@ async function processLink() {
         });
     } catch (error) {
         if (!link) return li.remove();
-        try {
-            follow(() => {
-                const remove = document.createElement('button');
-                remove.className = 'btn';
-                remove.type = 'button';
-                remove.innerHTML = xIcon;
-                remove.onclick = () => { li.remove(); };
-                a.replaceWith(remove);
-                a2.classList.remove('opaque');
-            });
-        } catch (error) {
-            li.remove();
-            console.error(error);
-        }
+        follow(() => {
+            const remove = document.createElement('button');
+            remove.className = 'btn';
+            remove.type = 'button';
+            remove.innerHTML = minusIcon;
+            remove.onclick = () => { li.remove(); };
+            a.replaceWith(remove);
+            a2.classList.remove('opaque');
+        });
         console.error(error);
     } finally {
-        setPercent = undefined;
+        kill?.remove();
+        container.replaceWith(...container.children);
     }
 }
 

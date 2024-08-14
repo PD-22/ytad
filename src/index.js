@@ -54,6 +54,10 @@ async function createWindow() {
   });
 
   await browserWindow.loadFile(path.join(__dirname, 'index.html'));
+  if (isDevelopment) await browserWindow.webContents.executeJavaScript(`
+    document.querySelector('input').value = 'https://youtube.com/watch?v=NqThf-MpCjs';
+    document.querySelector('form').requestSubmit();
+  `);
 }
 
 app.whenReady().then(() => {
@@ -93,8 +97,11 @@ app.whenReady().then(() => {
       { quality: 'highestaudio', filter: 'audioonly' }
     );
 
-    await new Promise((resolve, reject) => ffmpeg()
-      .input(ytdl.downloadFromInfo(info, { format }))
+    const command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
+    const killListener = () => { command.kill(); };
+    ipcMain.once(`kill-${id}`, killListener);
+
+    await new Promise((resolve, reject) => command
       .audioCodec('libmp3lame')
       .format('mp3')
       .on('progress', x => {
@@ -105,6 +112,7 @@ app.whenReady().then(() => {
       .on('error', (err) => { reject(err); })
       .save(output)
     );
+    ipcMain.removeListener(`kill-${id}`, killListener);
     return output;
   });
 });

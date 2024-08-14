@@ -137,6 +137,26 @@ li>a.info:hover {
     animation: none;
 }
 
+.container {
+    position: relative;
+}
+
+.container:focus-within .under,
+.container:hover .under {
+    opacity: .5;
+}
+
+.container:focus-within .over,
+.container:hover .over {
+    opacity: 1;
+}
+
+.container .over {
+    position: absolute;
+    top: 0;
+    opacity: 0;
+}
+
 @keyframes spin {
     from {
         transform: rotate(0deg);
