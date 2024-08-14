@@ -22,6 +22,43 @@ const loadingIcon = `
 </svg>
 `;
 
+function progressIcon(percent, s = 24, r = 9, o = 1 / 2 ** 3) {
+    percent = Math.max(0, Math.min(percent, 1));
+    const length = 2 * Math.PI * r;
+    const dashoffset = length * (1 - percent);
+    return `
+        <svg 
+            xmlns="http://www.w3.org/2000/svg"       
+            width="${s}"     
+            height="${s}"    
+            viewBox="0 0 ${s} ${s}"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-loader-circle"
+        >
+            <circle
+                cx="${s / 2}"
+                cy="${s / 2}"
+                r="${r}"
+                stroke-opacity="${o}"
+                fill="none"
+            ></circle>
+            <circle
+                cx="${s / 2}"
+                cy="${s / 2}"
+                r="${r}"
+                stroke-dasharray="${length}"
+                stroke-dashoffset="${dashoffset}"
+                transform="rotate(-90 ${s / 2} ${s / 2})"
+            >
+            </circle>
+        </svg>
+    `;
+}
+
 const xIcon = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
@@ -59,16 +96,16 @@ async function processLink() {
     const li = document.createElement('li');
     const a = document.createElement('a');
     const a2 = document.createElement('a');
-    const pre = document.createElement('pre');
-    let setPercent = p => pre.textContent = Math.floor(p * 100) + '%';
+    let setPercent = p => {
+        a.classList.add('no-spin');
+        a.innerHTML = progressIcon(p);
+    };
 
     try {
         follow(() => {
             ul.appendChild(li);
             li.appendChild(a2);
-            li.appendChild(pre);
             li.appendChild(a);
-            pre.className='opaque';
             a2.className = 'info opaque';
             a2.title = a2.textContent = a2.href = link;
             a.className = 'btn';
@@ -87,11 +124,9 @@ async function processLink() {
         a.title = location;
 
         const id = Math.random();
-        setPercent(0);
         window.api.onProgress(id, p => setPercent?.(p));
         const output = await window.api.start(id, link, location);
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
-        setPercent?.(1);
         follow(() => {
             a.innerHTML = externalIcon;
             a.title = a.href = output;

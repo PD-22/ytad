@@ -133,6 +133,10 @@ li>a.info:hover {
     animation: spin 1s linear infinite;
 }
 
+.no-spin .lucide-loader-circle {
+    animation: none;
+}
+
 @keyframes spin {
     from {
         transform: rotate(0deg);
