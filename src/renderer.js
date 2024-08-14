@@ -74,7 +74,9 @@ const ul = document.getElementsByTagName('ul')[0];
 
 form.addEventListener('submit', e => {
     e.preventDefault();
-    if (!input.value.trim()) return;
+    const value = input.value;
+    if (!value.trim()) return;
+    if (!/http(s):\/\//.test(value)) input.value = `https://${value}`;
     processLink();
 });
 form.addEventListener('keyup', e => {
@@ -87,10 +89,13 @@ form.addEventListener('keydown', e => {
     if (e.code === "Enter" && (tag === "INPUT" || tag === "BUTTON"))
         e.preventDefault();
 });
-input.addEventListener('paste', () => setTimeout(processLink));
+input.addEventListener('paste', () => setTimeout(() => {
+    const linkLike = /^\s*(http(s)?:\/\/)?(www\.|music\.)?youtu(be\.com|\.be)\S+\s*$/;
+    if (linkLike.test(input.value)) form.requestSubmit();
+}));
 
 async function processLink() {
-    const link = input.value;
+    let link = input.value;
     if (typeof link !== 'string' || !link) return;
 
     const li = document.createElement('li');
@@ -112,11 +117,13 @@ async function processLink() {
             a.innerHTML = loadingIcon;
         });
 
-        const title = await window.api.title(link);
+        const { url, title } = await window.api.info(link);
         if (typeof title !== 'string' || !title) throw new Error('Invalid title')
+        if (typeof url !== 'string' || !url) throw new Error('Invalid url')
         follow(() => {
             a2.classList.remove('opaque')
             a2.textContent = title;
+            a2.title = a2.href = link = url;
         });
 
         const location = await window.api.location(title);

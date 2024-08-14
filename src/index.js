@@ -71,9 +71,12 @@ app.whenReady().then(() => {
     globalShortcut.unregister("CommandOrControl+R");
   });
 
-  ipcMain.handle('title', async (_, link) => {
+  ipcMain.handle('info', async (_, link) => {
     const info = await ytdl.getInfo(link);
-    return info.videoDetails.title;
+    return {
+      url: info.videoDetails.video_url,
+      title: info.videoDetails.title
+    }
   });
 
   ipcMain.handle('location', (_, title) => {
