@@ -32,8 +32,13 @@ async function createWindow() {
 
   const handleLink = (event, url) => {
     event.preventDefault();
-    if (/^file:\/\/\/.*\.mp3$/.test(url)) {
-      shell.showItemInFolder(url);
+    url = decodeURIComponent(url);
+    if (url.startsWith('file:///')) {
+      if (existsSync(url.replace(/^file:\/\/\//, ''))) {
+        shell.showItemInFolder(url);
+      } else {
+        shell.openExternal(path.dirname(url));
+      }
     } else {
       shell.openExternal(url);
     }
@@ -127,10 +132,13 @@ app.whenReady().then(() => {
   browserWindow.setPosition(0, 0);
   browserWindow.setSize(width / 2, height);
   browserWindow.webContents.openDevTools();
-  browserWindow.webContents.executeJavaScript(`
-    document.querySelector('input').value = 'https://youtube.com/watch?v=NqThf-MpCjs';
-    document.querySelector('form').requestSubmit();
-  `);
+  const title = 'Gypsy Woman Shes Homeless La Da Dee La Da Da Basement Boy Strip To The Bone Mix';
+  unlink(path.join(app.getPath('downloads'), `${title}.mp3`))
+    .catch(e => { if (e.code !== 'ENOENT') throw e; })
+    .finally(() => browserWindow.webContents.executeJavaScript(`
+      document.querySelector('input').value = 'https://youtube.com/watch?v=NqThf-MpCjs';
+      document.querySelector('form').requestSubmit();
+    `));
 });
 
 function uniquePath(filePath) {
