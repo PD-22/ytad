@@ -108,7 +108,15 @@ async function processLink() {
     const li = document.createElement('li');
     const a = document.createElement('a');
     const a2 = document.createElement('a');
-    let kill, container, reject;
+    const container = document.createElement('div');
+    const kill = document.createElement('button');
+    let reject;
+    const rejectable = (promise, callback) => {
+        const rejectPromise = new Promise((_, r) => {
+            reject = reason => { r(reason); callback?.(); }
+        });
+        return Promise.race([promise, rejectPromise]);
+    };
     let setPercent = p => {
         a.classList.add('no-spin');
         a.innerHTML = progressIcon(p);
@@ -117,15 +125,27 @@ async function processLink() {
     try {
         follow(() => {
             ul.appendChild(li);
+
             li.appendChild(a2);
-            li.appendChild(a);
             a2.className = 'info opaque';
             a2.title = a2.textContent = a2.href = link;
+
+            li.appendChild(container);
+            container.className = 'container';
+
+            container.append(a)
             a.className = 'btn';
             a.innerHTML = loadingIcon;
+            a.classList.add('under');
+
+            container.appendChild(kill);
+            kill.className = 'btn over';
+            kill.type = 'button';
+            kill.innerHTML = xIcon;
+            kill.onclick = () => { reject?.('loading aborted'); };
         });
 
-        const { url, title } = await window.api.info(link);
+        const { url, title } = await rejectable(window.api.info(link));
         if (typeof title !== 'string' || !title) throw new Error('Invalid title')
         if (typeof url !== 'string' || !url) throw new Error('Invalid url')
         follow(() => {
@@ -134,37 +154,21 @@ async function processLink() {
             a2.title = a2.href = link = url;
         });
 
-        const location = await window.api.location(title);
+        const location = await rejectable(window.api.location(title));
         if (typeof location !== 'string' || !location) throw new Error('Invalid location');
+        follow(() => {
+            a.title = location;
+        });
 
         const id = Math.random();
         window.api.onProgress(id, p => setPercent?.(p));
-
-        follow(() => {
-            container = document.createElement('div');
-            a.title = location;
-            container.className = 'container';
-            a.replaceWith(container);
-            container.append(a)
-            a.classList.add('under');
-            kill = document.createElement('button');
-            kill.innerHTML = xIcon;
-            kill.className = 'btn over';
-            kill.type = 'button';
-            kill.onclick = () => {
-                window.api.kill(id);
-                reject?.('loading aborted');
-            };
-            container.appendChild(kill);
-        });
-
-        const output = await Promise.race([
-            new Promise((_, f) => reject = f),
-            window.api.start(id, link, location)
-        ]);
+        const output = await rejectable(
+            window.api.start(id, link, location),
+            () => window.api.kill(id)
+        );
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
         follow(() => {
-            kill?.remove();
+            kill.remove();
             a.innerHTML = externalIcon;
             a.title = a.href = output;
         });
