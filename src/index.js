@@ -1,9 +1,10 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell, screen } = require('electron');
 const path = require('path');
 const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
 const { existsSync } = require('fs');
+const { unlink } = require('fs/promises');
 
 if (require('electron-squirrel-startup')) app.quit();
 
@@ -21,11 +22,6 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     }
   });
-  if (isDevelopment) {
-    browserWindow.setPosition(0, 0);
-    browserWindow.setSize(900, 900);
-    browserWindow.webContents.openDevTools();
-  }
 
   browserWindow.on('closed', () => { browserWindow = null; });
   browserWindow.on('focus', () => globalShortcut.register('F11',
@@ -54,10 +50,6 @@ async function createWindow() {
   });
 
   await browserWindow.loadFile(path.join(__dirname, 'index.html'));
-  if (isDevelopment) await browserWindow.webContents.executeJavaScript(`
-    document.querySelector('input').value = 'https://youtube.com/watch?v=NqThf-MpCjs';
-    document.querySelector('form').requestSubmit();
-  `);
 }
 
 app.whenReady().then(() => {
@@ -90,14 +82,12 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('start', async (_, id, link, output) => {
+    const channel = `kill-${id}`;
     let command, aborted;
-    const killListener = () => {
-      command?.kill();
-      aborted = true;
-    };
-    ipcMain.once(`kill-${id}`, killListener);
-
+    const listener = () => { command?.kill(); aborted = true; };
     try {
+      ipcMain.once(channel, listener);
+
       const info = await ytdl.getInfo(link);
       if (aborted) return console.log('command aborted');
 
@@ -120,10 +110,27 @@ app.whenReady().then(() => {
         .save(output)
       );
       return output;
+    } catch (err) {
+      setTimeout(() => unlink(output).catch(err => {
+        if (err.code === 'ENOENT') return;
+        console.error('Delete file failed:', err);
+      }));
+      throw err;
     } finally {
-      ipcMain.removeListener(`kill-${id}`, killListener);
+      ipcMain.removeListener(channel, listener);
     }
   });
+}).then(() => {
+  if (!isDevelopment) return;
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+  browserWindow.setPosition(0, 0);
+  browserWindow.setSize(width / 2, height);
+  browserWindow.webContents.openDevTools();
+  browserWindow.webContents.executeJavaScript(`
+    document.querySelector('input').value = 'https://youtube.com/watch?v=NqThf-MpCjs';
+    document.querySelector('form').requestSubmit();
+  `);
 });
 
 function uniquePath(filePath) {
