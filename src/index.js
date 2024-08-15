@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell, screen, clipboard } = require('electron');
 const path = require('path');
 const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
@@ -48,10 +48,14 @@ async function createWindow() {
   browserWindow.webContents.on('will-redirect', handleLink);
   browserWindow.webContents.on('will-frame-navigate', handleLink);
 
-  browserWindow.webContents.on('context-menu', (_) => {
-    const roles = ['cut', 'copy', 'paste', 'delete'];
-    const template = roles.map(role => ({ role }));
-    Menu.buildFromTemplate(template).popup(browserWindow);
+  browserWindow.webContents.on('context-menu', (_, event) => {
+    const click = () => clipboard.writeText(event.selectionText || event.linkURL);
+    Menu.buildFromTemplate([
+      { role: 'cut' },
+      { label: 'Copy', click },
+      { role: 'paste' },
+      { role: 'delete' }
+    ]).popup(browserWindow);
   });
 
   await browserWindow.loadFile(path.join(__dirname, 'index.html'));
