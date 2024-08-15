@@ -1,10 +1,10 @@
 const { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell, screen, clipboard } = require('electron');
-const path = require('path');
+const { dirname, join, parse } = require('path');
 const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
 const { existsSync } = require('fs');
-const { unlink } = require('fs/promises');
+const { unlink, readdir } = require('fs/promises');
 
 if (require('electron-squirrel-startup')) app.quit();
 
@@ -12,14 +12,23 @@ ffmpeg.setFfmpegPath(ffmpegStatic);
 Menu.setApplicationMenu(null);
 const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 
+const lock = (() => {
+  const map = new Map();
+  const get = k => map.get(k) ?? 0;
+  const set = (k, v) => map.set(k, v);
+  const inc = k => set(k, get(k) + 1);
+  const dec = k => set(k, get(k) - 1);
+  return { get, inc, dec };
+})();
+
 /** @type {BrowserWindow} */ let browserWindow = null;
 async function createWindow() {
   browserWindow = new BrowserWindow({
     width: 600, height: 400,
-    icon: path.join(__dirname, 'icon.ico'),
+    icon: join(__dirname, 'icon.ico'),
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: join(__dirname, 'preload.js')
     }
   });
 
@@ -37,7 +46,7 @@ async function createWindow() {
       if (existsSync(url.replace(/^file:\/\/\//, ''))) {
         shell.showItemInFolder(url);
       } else {
-        shell.openExternal(path.dirname(url));
+        shell.openExternal(dirname(url));
       }
     } else {
       shell.openExternal(url);
@@ -58,7 +67,7 @@ async function createWindow() {
     ]).popup(browserWindow);
   });
 
-  await browserWindow.loadFile(path.join(__dirname, 'index.html'));
+  await browserWindow.loadFile(join(__dirname, 'index.html'));
 }
 
 app.whenReady().then(() => {
@@ -87,7 +96,7 @@ app.whenReady().then(() => {
   ipcMain.handle('location', (_, title) => {
     const dir = app.getPath('downloads');
     const file = title.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
-    return uniquePath(path.join(dir, `${file}.mp3`));
+    return uniquePath(join(dir, `${file}.mp3`));
   });
 
   ipcMain.handle('start', async (_, id, link, output) => {
@@ -106,6 +115,7 @@ app.whenReady().then(() => {
 
       command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
       output = uniquePath(output);
+      lock.inc(output);
 
       await new Promise((resolve, reject) => command
         .audioCodec('libmp3lame')
@@ -126,35 +136,43 @@ app.whenReady().then(() => {
       }));
       throw err;
     } finally {
+      lock.dec(output);
       ipcMain.removeListener(channel, listener);
     }
   });
-}).then(() => {
+}).then(async () => {
   if (!isDevelopment) return;
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
   browserWindow.setPosition(0, 0);
   browserWindow.setSize(width / 2, height);
   browserWindow.webContents.openDevTools();
-  const title = 'Gypsy Woman Shes Homeless La Da Dee La Da Da Basement Boy Strip To The Bone Mix';
-  unlink(path.join(app.getPath('downloads'), `${title}.mp3`))
-    .catch(e => { if (e.code !== 'ENOENT') throw e; })
-    .finally(() => browserWindow.webContents.executeJavaScript(`
+
+  try {
+    const dir = app.getPath('downloads');
+    const files = await readdir(dir);
+    const title = 'Gypsy Woman Shes Homeless La Da Dee La Da Da Basement Boy Strip To The Bone Mix';
+    await Promise.allSettled(files
+      .filter(file => file.startsWith(title) && file.endsWith('.mp3'))
+      .map(file => unlink(join(dir, file)))
+    )
+  } finally {
+    browserWindow.webContents.executeJavaScript(`
       document.querySelector('input').value = 'https://youtube.com/watch?v=NqThf-MpCjs';
       document.querySelector('form').requestSubmit();
-    `));
+    `);
+  }
 });
 
-function uniquePath(filePath) {
-  let counter = 1;
-  const dirName = path.dirname(filePath);
-  const baseName = path.basename(filePath, path.extname(filePath));
-  const extension = path.extname(filePath);
+function uniquePath(path) {
+  const { dir, name, ext } = parse(path);
+  const [, main = name, digits] = name.match(/^(.+)\s\((\d+)\)/) ?? [];
+  let count = parseInt(digits ?? 0);
 
-  while (existsSync(filePath)) filePath = path
-    .join(dirName, `${baseName} (${counter++})${extension}`);
+  while (lock.get(path) || existsSync(path))
+    path = join(dir, `${main} (${++count})${ext}`);
 
-  return filePath;
+  return path;
 }
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
