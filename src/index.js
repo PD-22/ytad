@@ -101,7 +101,8 @@ app.whenReady().then(() => {
 
   ipcMain.handle('start', async (_, id, link, output) => {
     const channel = `kill-${id}`;
-    let command, aborted;
+    /** @type {ffmpeg.FfmpegCommand|undefined} */
+    let command, aborted = false;
     const listener = () => { command?.kill(); aborted = true; };
     try {
       ipcMain.once(channel, listener);
@@ -112,16 +113,17 @@ app.whenReady().then(() => {
       const format = ytdl.chooseFormat(info.formats,
         { quality: 'highestaudio', filter: 'audioonly' }
       );
+      const length = (x => x > 0 ? x : null)(Number(format.contentLength));
 
       command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
       output = uniquePath(output);
       lock.inc(output);
 
       await new Promise((resolve, reject) => command
-        .audioCodec('libmp3lame')
         .format('mp3')
         .on('progress', x => {
-          const percent = x.targetSize * 1000 / format.contentLength;
+          if (!length) return;
+          const percent = x.targetSize * 1000 / length;
           browserWindow.webContents.send(`progress-${id}`, percent);
         })
         .on('end', () => { resolve(); })
@@ -138,6 +140,7 @@ app.whenReady().then(() => {
     } finally {
       lock.dec(output);
       ipcMain.removeListener(channel, listener);
+      command?.kill();
     }
   });
 }).then(async () => {
@@ -158,7 +161,7 @@ app.whenReady().then(() => {
     )
   } finally {
     browserWindow.webContents.executeJavaScript(`
-      document.querySelector('input').value = 'https://youtube.com/watch?v=NqThf-MpCjs';
+      document.querySelector('input').value = 'https://www.youtube.com/watch?v=NqThf-MpCjs';
       document.querySelector('form').requestSubmit();
     `);
   }
