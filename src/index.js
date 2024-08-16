@@ -13,12 +13,26 @@ Menu.setApplicationMenu(null);
 const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 
 const lock = (() => {
-  const map = new Map();
-  const get = k => map.get(k) ?? 0;
-  const set = (k, v) => map.set(k, v);
-  const inc = k => set(k, get(k) + 1);
-  const dec = k => set(k, get(k) - 1);
-  return { get, inc, dec };
+  /** @type {Map<string, Set<() => Promise>>} */
+  const _ = new Map();
+  const get = k => _.get(k);
+  const has = k => _.has(k);
+  const set = (k, v) => _.set(k, v);
+  const count = k => get(k)?.size ?? 0;
+  const inc = (k, f) => { if (!has(k)) set(k, new Set()); get(k).add(f); };
+  const dec = (k, v) => {
+    if (!has(k)) return;
+    const killSet = get(k);
+    if (!killSet.has(v)) return;
+    killSet.delete(v);
+    if (!killSet.size) _.delete(k);
+  };
+  const clean = () => {
+    const getKillPromises = () => Array.from(_.values()).flatMap(s => Array.from(s.values()).map(f => f()));
+    const killPromises = getKillPromises();
+    if (killPromises.length) return Promise.all(killPromises);
+  };
+  return { count, inc, dec, clean };
 })();
 
 /** @type {BrowserWindow} */ let browserWindow = null;
@@ -76,13 +90,24 @@ app.whenReady().then(() => {
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 
   app.on('browser-window-focus', () => {
-    const reload = () => { app.relaunch(); app.exit(); };
+    const reload = () => {
+      const maybePromise = lock.clean();
+      const f = () => { app.relaunch(); app.exit(); };
+      if (!maybePromise) f();
+      else maybePromise.finally(f);
+    };
     globalShortcut.register("F5", reload)
     globalShortcut.register("CommandOrControl+R", reload)
   });
   app.on('browser-window-blur', () => {
     globalShortcut.unregister("F5");
     globalShortcut.unregister("CommandOrControl+R");
+  });
+  app.on('before-quit', e => {
+    const maybePromise = lock.clean();
+    if (!maybePromise) return;
+    e.preventDefault();
+    maybePromise.then(() => { app.quit(); });
   });
 
   ipcMain.handle('info', async (_, link) => {
@@ -102,8 +127,15 @@ app.whenReady().then(() => {
   ipcMain.handle('start', async (_, id, link, output) => {
     const channel = `kill-${id}`;
     /** @type {ffmpeg.FfmpegCommand|undefined} */
-    let command, aborted = false;
+    let command, aborted = false, resolveKill;
     const listener = () => { command?.kill(); aborted = true; };
+    const killPromise = new Promise(f => resolveKill = f);
+    const killCallback = () => {
+      aborted = true;
+      if (!command) return;
+      command?.kill();
+      return killPromise;
+    };
     try {
       ipcMain.once(channel, listener);
 
@@ -117,28 +149,28 @@ app.whenReady().then(() => {
 
       command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
       output = uniquePath(output);
-      lock.inc(output);
+      lock.inc(output, killCallback);
 
       await new Promise((resolve, reject) => command
         .format('mp3')
         .on('progress', x => {
           if (!length) return;
           const percent = x.targetSize * 1000 / length;
-          browserWindow.webContents.send(`progress-${id}`, percent);
+          browserWindow?.webContents.send(`progress-${id}`, percent);
         })
         .on('end', () => { resolve(); })
-        .on('error', err => { reject(err); })
+        .on('error', err => setTimeout(() => unlink(output)
+          .catch(err => {
+            if (err.code === 'ENOENT') return;
+            console.error('Delete file failed:', err);
+          })
+          .finally(() => { reject(err); resolveKill(); })
+        ))
         .save(output)
       );
       return output;
-    } catch (err) {
-      setTimeout(() => unlink(output).catch(err => {
-        if (err.code === 'ENOENT') return;
-        console.error('Delete file failed:', err);
-      }));
-      throw err;
     } finally {
-      lock.dec(output);
+      lock.dec(output, killCallback);
       ipcMain.removeListener(channel, listener);
       command?.kill();
     }
@@ -148,7 +180,7 @@ app.whenReady().then(() => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
   browserWindow.setPosition(0, 0);
-  browserWindow.setSize(width / 2, height);
+  browserWindow.setSize(width / 2, height * 2 / 3);
   browserWindow.webContents.openDevTools();
 
   try {
@@ -172,7 +204,7 @@ function uniquePath(path) {
   const [, main = name, digits] = name.match(/^(.+)\s\((\d+)\)/) ?? [];
   let count = parseInt(digits ?? 0);
 
-  while (lock.get(path) || existsSync(path))
+  while (lock.count(path) || existsSync(path))
     path = join(dir, `${main} (${++count})${ext}`);
 
   return path;
