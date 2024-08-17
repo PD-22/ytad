@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell, screen, clipboard } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell, screen, clipboard, dialog } = require('electron');
 const { dirname, join, parse } = require('path');
 const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
@@ -20,22 +20,27 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 
 function initApp() {
   createWindow();
+  browserWindow.on('close', e => { if (!lock.confirm()) e.preventDefault(); });
 
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 
   app.on('browser-window-focus', () => {
-    globalShortcut.register("F5", relaunch)
-    globalShortcut.register("CommandOrControl+R", relaunch)
+    const restart = async () => {
+      if (!lock.confirm()) return;
+      lock.clean().finally(() => {
+        app.relaunch(); app.exit();
+      });
+    }
+    globalShortcut.register("F5", restart)
+    globalShortcut.register("CommandOrControl+R", restart)
   });
   app.on('browser-window-blur', () => {
     globalShortcut.unregister("F5");
     globalShortcut.unregister("CommandOrControl+R");
   });
   app.on('before-quit', e => {
-    const maybePromise = lock.clean();
-    if (!maybePromise) return;
     e.preventDefault();
-    maybePromise.then(() => { app.quit(); });
+    lock.clean().finally(app.exit);
   });
 
   ipcMain.handle('info', async (_, link) => {
@@ -172,18 +177,11 @@ async function debug() {
       .map(file => unlink(join(dir, file)))
     );
   } finally {
-    browserWindow.webContents.executeJavaScript(`
+    await browserWindow.webContents.executeJavaScript(`(${async () => {
       document.querySelector('input').value = 'https://www.youtube.com/watch?v=NqThf-MpCjs';
       document.querySelector('form').requestSubmit();
-    `);
+    }})()`);
   }
-}
-
-function relaunch() {
-  const maybePromise = lock.clean();
-  const f = () => { app.relaunch(); app.exit(); };
-  if (!maybePromise) f();
-  else maybePromise.finally(f);
 }
 
 function uniquePath(path) {
@@ -212,10 +210,17 @@ function initLock() {
     killSet.delete(v);
     if (!killSet.size) _.delete(k);
   };
-  const clean = () => {
-    const getKillPromises = () => Array.from(_.values()).flatMap(s => Array.from(s.values()).map(f => f()));
-    const killPromises = getKillPromises();
-    if (killPromises.length) return Promise.all(killPromises);
+  const callbacks = () => Array.from(_.values()).flatMap(s => Array.from(s.values()))
+  const clean = () => Promise.all(callbacks().map(f => f()));
+  const confirm = () => {
+    if (!callbacks().length) return true;
+    const choice = dialog.showMessageBoxSync(browserWindow, {
+      type: 'warning',
+      buttons: ['Yes', 'No'],
+      title: 'Exit',
+      message: 'Are you sure you want to exit? This will cancel any ongoing downloads.'
+    });
+    return choice === 0;
   };
-  return { count, inc, dec, clean };
+  return { count, inc, dec, clean, confirm };
 }
