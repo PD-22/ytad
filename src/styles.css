@@ -139,33 +139,46 @@ li>a.info:hover {
 
 .container {
     position: relative;
+    display: flex;
+    background: var(--background);
 }
 
 .container:focus-within .under,
-.container:hover .under,
 li:hover .container .under {
     opacity: .33;
 }
 
 .container:focus-within .under svg,
-.container:hover .under svg,
 li:hover .container .under svg {
     width: 30px;
     height: 30px;
 }
 
 .container:focus-within .over,
-.container:hover .over,
 li:hover .container .over {
     opacity: 1;
 }
 
 .container .over {
     position: absolute;
-    top: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     opacity: 0;
     width: 18px;
     height: 18px;
+}
+
+.container:focus-within .extra,
+li:hover .container .extra {
+    opacity: 1;
+    position: static;
+    right: 0px;
+}
+
+.extra {
+    opacity: 0;
+    position: absolute;
 }
 
 @keyframes spin {

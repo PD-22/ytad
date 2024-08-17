@@ -74,6 +74,14 @@ const minusIcon = `
 </svg>
 `;
 
+const retryIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw">
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+    <path d="M3 3v5h5" />
+</svg>
+`;
+
 const form = document.getElementsByTagName('form')[0];
 const input = form.getElementsByTagName('input')[0];
 const button = form.getElementsByTagName('button')[0];
@@ -84,7 +92,7 @@ form.addEventListener('submit', e => {
     const value = input.value;
     if (!value.trim()) return;
     if (!/http(s):\/\//.test(value)) input.value = `https://${value}`;
-    processLink();
+    processLink(value);
 });
 form.addEventListener('keyup', e => {
     const tag = e.target.tagName;
@@ -101,11 +109,7 @@ input.addEventListener('paste', () => setTimeout(() => {
     if (linkLike.test(input.value)) form.requestSubmit();
 }));
 
-async function processLink() {
-    let link = input.value;
-    if (typeof link !== 'string' || !link) return;
-
-    const li = document.createElement('li');
+async function processLink(link, li) {
     const a = document.createElement('a');
     const a2 = document.createElement('a');
     const container = document.createElement('div');
@@ -124,8 +128,8 @@ async function processLink() {
 
     try {
         follow(() => {
-            ul.appendChild(li);
-
+            if (!li) ul.appendChild(li = document.createElement('li'))
+            li.innerHTML = '';
             li.appendChild(a2);
             a2.className = 'info opaque';
             a2.title = a2.textContent = a2.href = link;
@@ -172,6 +176,7 @@ async function processLink() {
             kill.remove();
             a.innerHTML = externalIcon;
             a.title = a.href = output;
+            a.classList.remove('under');
         });
     } catch (error) {
         if (!link) return li.remove();
@@ -181,10 +186,13 @@ async function processLink() {
             kill.onclick = () => { li.remove(); };
             a.remove();
             a2.classList.remove('opaque');
+            const retry = document.createElement('button');
+            retry.className = 'btn extra'
+            retry.innerHTML = retryIcon
+            retry.onclick = () => { processLink(link, li); }
+            container.prepend(retry);
         });
         if (error !== 'cancel') console.error(error);
-    } finally {
-        container?.replaceWith(...container.children);
     }
 }
 
