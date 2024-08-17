@@ -1,11 +1,9 @@
 module.exports = {
   packagerConfig: {
     asar: false,
-    name: 'Youtube Audio Downloader',
+    name: 'YouTube Audio Downloader',
     icon: 'src/icon.ico',
-    extraResource: [
-      'node_modules/ffmpeg-static/ffmpeg.exe'
-    ]
+    extraResource: []
   },
   rebuildConfig: {},
   makers: [

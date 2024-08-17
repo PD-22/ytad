@@ -2,7 +2,7 @@
   "name": "ytad",
   "productName": "ytad",
   "version": "1.0.0",
-  "description": "Youtube Audio Downloader",
+  "description": "YouTube Audio Downloader",
   "main": "src/index.js",
   "scripts": {
     "dev": "electron .",
@@ -21,7 +21,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
-    "electron": "31.3.1"
+    "electron": "^31.4.0"
   },
   "keywords": [],
   "author": "PD-22",

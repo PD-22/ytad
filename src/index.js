@@ -124,7 +124,7 @@ async function startEventHandler(_, id, link, output) {
     ipcMain.once(channel, listener);
 
     const info = await ytdl.getInfo(link);
-    if (aborted) return console.log('command aborted');
+    if (aborted) return;
 
     const format = ytdl.chooseFormat(info.formats,
       { quality: 'highestaudio', filter: 'audioonly' }
@@ -144,15 +144,15 @@ async function startEventHandler(_, id, link, output) {
       })
       .on('end', () => { resolve(); })
       .on('error', err => setTimeout(() => unlink(output)
-        .catch(err => {
-          if (err.code === 'ENOENT') return;
-          console.error('Delete file failed:', err);
-        })
         .finally(() => { reject(err); resolveKill(); })
       ))
       .save(output)
     );
     return output;
+  } catch (error) {
+    const sigkill = 'ffmpeg was killed with signal SIGKILL'
+    if (error?.message === sigkill) return { error: 'cancel' };
+    throw error;
   } finally {
     lock.dec(output, killCallback);
     ipcMain.removeListener(channel, listener);

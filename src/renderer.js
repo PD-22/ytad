@@ -166,6 +166,7 @@ async function processLink() {
             window.api.start(id, link, location),
             () => window.api.kill(id)
         );
+        if (output?.error === 'cancel') throw 'cancel';
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
         follow(() => {
             kill.remove();
@@ -181,7 +182,7 @@ async function processLink() {
             a.remove();
             a2.classList.remove('opaque');
         });
-        console.error(error);
+        if (error !== 'cancel') console.error(error);
     } finally {
         container?.replaceWith(...container.children);
     }
