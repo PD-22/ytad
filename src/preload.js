@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld('api', {
     location: defaultPath => ipcRenderer.invoke('location', defaultPath),
     start: (id, link, output) => ipcRenderer.invoke('start', id, link, output),
     onProgress: (id, callback) => ipcRenderer.on(`progress-${id}`, (_, value) => callback(value)),
-    kill: id => ipcRenderer.send(`kill-${id}`)
+    kill: id => ipcRenderer.send(`kill-${id}`),
+    folder: () => ipcRenderer.invoke('folder')
 });

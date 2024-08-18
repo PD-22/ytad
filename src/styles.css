@@ -181,6 +181,20 @@ li:hover .container .extra {
     position: absolute;
 }
 
+.folder {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+form:hover .folder,
+.folder:focus-visible {
+    opacity: 1;
+    position: static;
+    pointer-events: auto;
+
+}
+
 @keyframes spin {
     from {
         transform: rotate(0deg);

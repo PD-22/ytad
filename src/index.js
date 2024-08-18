@@ -4,7 +4,7 @@ const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
 const { existsSync } = require('fs');
-const { unlink, readdir } = require('fs/promises');
+const { unlink, readdir, access, stat } = require('fs/promises');
 
 if (require('electron-squirrel-startup')) app.quit();
 ffmpeg.setFfmpegPath(ffmpegStatic);
@@ -14,6 +14,7 @@ Menu.setApplicationMenu(null);
 let browserWindow = null;
 const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 const lock = initLock();
+let destination = app.getPath('downloads');
 
 app.whenReady().then(initApp).then(debug);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
@@ -51,10 +52,21 @@ function initApp() {
     }
   });
 
-  ipcMain.handle('location', (_, title) => {
-    const dir = app.getPath('downloads');
+  ipcMain.handle('folder', async () => {
+    const dest = await promptDestination();
+    if (dest) destination = dest;
+  });
+
+  ipcMain.handle('location', async (_, title) => {
     const file = title.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
-    return uniquePath(join(dir, `${file}.mp3`));
+
+    const valid = await isDirectory(destination);
+    if (!valid) {
+      const dest = await promptDestination();
+      destination = dest ?? app.getPath('downloads');
+    }
+
+    return uniquePath(join(destination, `${file}.mp3`));
   });
 
   ipcMain.handle('start', startEventHandler);
@@ -193,6 +205,26 @@ function uniquePath(path) {
     path = join(dir, `${main} (${++count})${ext}`);
 
   return path;
+}
+
+async function isDirectory(p) {
+  if (!p) return false;
+  try {
+    await access(p);
+    const stats = await stat(p);
+    return stats.isDirectory();
+  } catch (err) {
+    return false;
+  }
+}
+
+async function promptDestination() {
+  const response = await dialog.showOpenDialog({
+    title: 'Select Download Folder',
+    defaultPath: app.getPath('downloads'),
+    properties: ['openDirectory']
+  });
+  return response.filePaths[0];
 }
 
 function initLock() {
