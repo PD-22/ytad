@@ -3,8 +3,8 @@ const { dirname, join, parse } = require('path');
 const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
-const { existsSync } = require('fs');
-const { unlink, readdir, access, stat } = require('fs/promises');
+const { existsSync, accessSync, statSync } = require('fs');
+const { unlink, readdir } = require('fs/promises');
 
 if (require('electron-squirrel-startup')) app.quit();
 ffmpeg.setFfmpegPath(ffmpegStatic);
@@ -14,7 +14,7 @@ Menu.setApplicationMenu(null);
 let browserWindow = null;
 const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 const lock = initLock();
-let destination = app.getPath('downloads');
+const destination = initDestination();
 
 app.whenReady().then(initApp).then(debug);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
@@ -52,21 +52,11 @@ function initApp() {
     }
   });
 
-  ipcMain.handle('folder', async () => {
-    const dest = await promptDestination();
-    if (dest) destination = dest;
-  });
+  ipcMain.handle('folder', async () => { return await destination.prompt(); });
 
   ipcMain.handle('location', async (_, title) => {
     const file = title.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
-
-    const valid = await isDirectory(destination);
-    if (!valid) {
-      const dest = await promptDestination();
-      destination = dest ?? app.getPath('downloads');
-    }
-
-    return uniquePath(join(destination, `${file}.mp3`));
+    return uniquePath(join(await destination.get(), `${file}.mp3`));
   });
 
   ipcMain.handle('start', startEventHandler);
@@ -207,26 +197,6 @@ function uniquePath(path) {
   return path;
 }
 
-async function isDirectory(p) {
-  if (!p) return false;
-  try {
-    await access(p);
-    const stats = await stat(p);
-    return stats.isDirectory();
-  } catch (err) {
-    return false;
-  }
-}
-
-async function promptDestination() {
-  const response = await dialog.showOpenDialog({
-    title: 'Select Download Folder',
-    defaultPath: app.getPath('downloads'),
-    properties: ['openDirectory']
-  });
-  return response.filePaths[0];
-}
-
 function initLock() {
   /** @type {Map<string, Set<() => Promise>>} */
   const _ = new Map();
@@ -255,4 +225,36 @@ function initLock() {
     return choice === 0;
   };
   return { count, inc, dec, clean, confirm };
+}
+
+function initDestination() {
+  let _;
+  const init = () => {
+    return _ = app.getPath('downloads');
+  };
+  const isValid = path => {
+    if (!path) return false;
+    try {
+      accessSync(path);
+      return statSync(path).isDirectory();
+    } catch (err) {
+      return false;
+    }
+  }
+  const prompt = async () => {
+    const response = await dialog.showOpenDialog({
+      title: 'Select Download Folder',
+      defaultPath: isValid(_) ? _ : init(),
+      properties: ['openDirectory']
+    });
+    const choice = response.filePaths[0];
+    if (isValid(choice)) _ = choice;
+    return _;
+  };
+  const get = async () => {
+    if (!_) init();
+    if (!isValid(_)) await prompt();
+    return _;
+  };
+  return { get, prompt };
 }
