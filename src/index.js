@@ -11,7 +11,7 @@ ffmpeg.setFfmpegPath(ffmpegStatic);
 Menu.setApplicationMenu(null);
 
 /** @type {BrowserWindow} */
-let browserWindow = null;
+let window = null;
 const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 const lock = initLock();
 const destination = initDestination();
@@ -21,10 +21,9 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 
 function initApp() {
   createWindow();
-  browserWindow.on('close', e => { if (!lock.confirm()) e.preventDefault(); });
+  window.on('close', e => { if (!lock.confirm()) e.preventDefault(); });
 
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
-
   app.on('browser-window-focus', () => {
     const restart = async () => {
       if (!lock.confirm()) return;
@@ -32,12 +31,16 @@ function initApp() {
         app.relaunch(); app.exit();
       });
     }
-    globalShortcut.register("F5", restart)
-    globalShortcut.register("CommandOrControl+R", restart)
+    globalShortcut.register("F5", restart);
+    globalShortcut.register("CommandOrControl+R", restart);
+    globalShortcut.register("F11", () =>
+      window.setFullScreen(!window.isFullScreen())
+    );
   });
   app.on('browser-window-blur', () => {
     globalShortcut.unregister("F5");
     globalShortcut.unregister("CommandOrControl+R");
+    globalShortcut.unregister("F11");
   });
   app.on('before-quit', e => {
     e.preventDefault();
@@ -51,19 +54,12 @@ function initApp() {
       title: info.videoDetails.title
     }
   });
-
-  ipcMain.handle('folder', async () => { return await destination.prompt(); });
-
-  ipcMain.handle('location', async (_, title) => {
-    const file = title.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
-    return uniquePath(join(await destination.get(), `${file}.mp3`));
-  });
-
+  ipcMain.handle('folder', destination.prompt);
   ipcMain.handle('start', startEventHandler);
 }
 
 async function createWindow() {
-  browserWindow = new BrowserWindow({
+  window = new BrowserWindow({
     width: 600, height: 400,
     icon: join(__dirname, 'icon.ico'),
     show: false,
@@ -72,12 +68,8 @@ async function createWindow() {
     }
   });
 
-  browserWindow.on('closed', () => { browserWindow = null; });
-  browserWindow.on('focus', () => globalShortcut.register('F11',
-    () => browserWindow.setFullScreen(!browserWindow.isFullScreen())
-  ));
-  browserWindow.on('blur', () => globalShortcut.unregisterAll());
-  browserWindow.webContents.on('did-finish-load', () => { browserWindow.show(); });
+  window.on('closed', () => { window = null; });
+  window.webContents.on('did-finish-load', () => { window.show(); });
 
   const handleLink = (event, url) => {
     event.preventDefault();
@@ -92,28 +84,28 @@ async function createWindow() {
       shell.openExternal(url);
     }
   };
-  browserWindow.webContents.on('new-window', handleLink);
-  browserWindow.webContents.on('will-navigate', handleLink);
-  browserWindow.webContents.on('will-redirect', handleLink);
-  browserWindow.webContents.on('will-frame-navigate', handleLink);
+  window.webContents.on('new-window', handleLink);
+  window.webContents.on('will-navigate', handleLink);
+  window.webContents.on('will-redirect', handleLink);
+  window.webContents.on('will-frame-navigate', handleLink);
 
-  browserWindow.webContents.on('context-menu', (_, event) => {
+  window.webContents.on('context-menu', (_, event) => {
     const click = () => clipboard.writeText(event.selectionText || event.linkURL);
     Menu.buildFromTemplate([
       { role: 'cut' },
       { label: 'Copy', click },
       { role: 'paste' },
       { role: 'delete' }
-    ]).popup(browserWindow);
+    ]).popup(window);
   });
 
-  await browserWindow.loadFile(join(__dirname, 'index.html'));
+  await window.loadFile(join(__dirname, 'index.html'));
 }
 
-async function startEventHandler(_, id, link, output) {
+async function startEventHandler(_, id, link, title) {
   const channel = `kill-${id}`;
   /** @type {ffmpeg.FfmpegCommand|undefined} */
-  let command, aborted = false, resolveKill;
+  let command, output, aborted = false, resolveKill;
   const listener = () => { command?.kill(); aborted = true; };
   const killPromise = new Promise(f => resolveKill = f);
   const killCallback = () => {
@@ -134,7 +126,8 @@ async function startEventHandler(_, id, link, output) {
     const length = (x => x > 0 ? x : null)(Number(format.contentLength));
 
     command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
-    output = uniquePath(output);
+    const file = title.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
+    output = uniquePath(join(await destination.get(), `${file}.mp3`));
     lock.inc(output, killCallback);
 
     await new Promise((resolve, reject) => command
@@ -142,7 +135,7 @@ async function startEventHandler(_, id, link, output) {
       .on('progress', x => {
         if (!length) return;
         const percent = x.targetSize * 1000 / length;
-        browserWindow?.webContents.send(`progress-${id}`, percent);
+        window?.webContents.send(`progress-${id}`, percent);
       })
       .on('end', () => { resolve(); })
       .on('error', err => setTimeout(() => unlink(output)
@@ -166,9 +159,9 @@ async function debug() {
   if (!isDevelopment) return;
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
-  browserWindow.setPosition(0, 0);
-  browserWindow.setSize(parseInt(width / 2), parseInt(height * 2 / 3));
-  browserWindow.webContents.openDevTools();
+  window.setPosition(0, 0);
+  window.setSize(parseInt(width / 2), parseInt(height * 2 / 3));
+  window.webContents.openDevTools();
 
   try {
     const dir = app.getPath('downloads');
@@ -179,7 +172,7 @@ async function debug() {
       .map(file => unlink(join(dir, file)))
     );
   } finally {
-    await browserWindow.webContents.executeJavaScript(`(${async () => {
+    await window.webContents.executeJavaScript(`(${async () => {
       document.querySelector('input').value = 'https://www.youtube.com/watch?v=NqThf-MpCjs';
       document.querySelector('form').requestSubmit();
     }})()`);
@@ -216,7 +209,7 @@ function initLock() {
   const clean = () => Promise.all(callbacks().map(f => f()));
   const confirm = () => {
     if (!callbacks().length) return true;
-    const choice = dialog.showMessageBoxSync(browserWindow, {
+    const choice = dialog.showMessageBoxSync(window, {
       type: 'warning',
       buttons: ['Yes', 'No'],
       title: 'Exit',
@@ -228,9 +221,14 @@ function initLock() {
 }
 
 function initDestination() {
-  let _;
-  const init = () => {
-    return _ = app.getPath('downloads');
+  const fallback = app.getPath('downloads');
+  const id = 'destination';
+  let _, store;
+  const set = path => { store.set(id, _ = path); return _; };
+  const init = async () => {
+    if (!store) store = new (await import('electron-store')).default()
+    const storedData = store.get(id);
+    return set(isValid(storedData) ? storedData : fallback);
   };
   const isValid = path => {
     if (!path) return false;
@@ -242,18 +240,19 @@ function initDestination() {
     }
   }
   const prompt = async () => {
+    if (!_) await init();
     const response = await dialog.showOpenDialog({
       title: 'Select Download Folder',
-      defaultPath: isValid(_) ? _ : init(),
+      defaultPath: isValid(_) ? _ : await init(),
       properties: ['openDirectory']
     });
     const choice = response.filePaths[0];
-    if (isValid(choice)) _ = choice;
+    if (isValid(choice)) set(choice);
     return _;
   };
   const get = async () => {
-    if (!_) init();
-    if (!isValid(_)) await prompt();
+    if (!_) return await init();
+    if (!isValid(_)) return set(fallback);
     return _;
   };
   return { get, prompt };

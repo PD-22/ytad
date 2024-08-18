@@ -163,16 +163,10 @@ async function processLink(link, li) {
             a2.title = a2.href = link = url;
         });
 
-        const location = await rejectable(window.api.location(title));
-        if (typeof location !== 'string' || !location) throw new Error('Invalid location');
-        follow(() => {
-            a.title = location;
-        });
-
         const id = Math.random();
         window.api.onProgress(id, p => setPercent?.(p));
         const output = await rejectable(
-            window.api.start(id, link, location),
+            window.api.start(id, link, title),
             () => window.api.kill(id)
         );
         if (output?.error === 'cancel') throw 'cancel';
