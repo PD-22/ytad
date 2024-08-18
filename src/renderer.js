@@ -166,7 +166,7 @@ async function processLink(link, li) {
         const id = Math.random();
         window.api.onProgress(id, p => setPercent?.(p));
         const output = await rejectable(
-            window.api.start(id, link, title),
+            window.api.download(id, link, title),
             () => window.api.kill(id)
         );
         if (output?.error === 'cancel') throw 'cancel';
