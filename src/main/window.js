@@ -2,7 +2,7 @@ const { BrowserWindow, Menu, shell, clipboard } = require('electron');
 const { dirname, join } = require('path');
 const { existsSync } = require('fs');
 
-module.exports = async () => {
+module.exports = () => {
   const window = new BrowserWindow({
     width: 600, height: 400,
     icon: join(__dirname, 'icon.ico'),
@@ -42,7 +42,7 @@ module.exports = async () => {
     ]).popup(window);
   });
 
-  await window.loadFile(join(__dirname, '../index.html'));
+  window.loadFile(join(__dirname, '../index.html'));
 
-  return window;
+  return window
 }

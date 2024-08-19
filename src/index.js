@@ -23,8 +23,8 @@ const destination = Destination();
 app.whenReady().then(initApp).then(debug);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
-async function initApp() {
-  window = await Window();
+function initApp() {
+  window = Window();
   window.on('closed', () => { window = null; });
   window.on('close', e => { if (!lock.confirm()) e.preventDefault(); });
 
