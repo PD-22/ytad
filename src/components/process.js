@@ -20,8 +20,8 @@ async function processLink(link, li) {
             if (!li) ul.appendChild(li = document.createElement('li'))
             li.innerHTML = '';
             li.appendChild(a2);
-            a2.className = 'info opaque';
-            a2.title = a2.textContent = a2.href = link;
+            a2.className = 'info';
+            a2.textContent = link;
 
             li.appendChild(container);
             container.className = 'container';
@@ -34,15 +34,15 @@ async function processLink(link, li) {
             container.appendChild(kill);
             kill.className = 'btn over';
             kill.type = 'button';
+            kill.title = 'Cancel';
             kill.innerHTML = xIcon;
-            kill.onclick = () => { reject?.('loading aborted'); };
+            kill.onclick = () => { reject?.('cancel'); };
         });
 
         const { url, title } = await rejectable(window.api.info(link));
         if (typeof title !== 'string' || !title) throw new Error('Invalid title')
         if (typeof url !== 'string' || !url) throw new Error('Invalid url')
         follow(() => {
-            a2.classList.remove('opaque')
             a2.textContent = title;
             a2.title = a2.href = link = url;
         });
@@ -66,13 +66,14 @@ async function processLink(link, li) {
         follow(() => {
             kill.className = 'btn';
             kill.innerHTML = minusIcon;
+            kill.title = 'Remove';
             kill.onclick = () => { li.remove(); };
             a.remove();
-            a2.classList.remove('opaque');
             const retry = document.createElement('button');
-            retry.className = 'btn extra'
-            retry.innerHTML = rotateIcon
-            retry.onclick = () => { processLink(link, li); }
+            retry.className = 'btn extra';
+            retry.innerHTML = rotateIcon;
+            retry.title = 'Retry';
+            retry.onclick = () => { processLink(link, li); };
             container.prepend(retry);
         });
         if (error !== 'cancel') console.error(error);

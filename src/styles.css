@@ -1,16 +1,14 @@
 :root {
     --foreground: black;
     --background: white;
-    --border: rgba(0, 0, 0, .0625);
-    --opaque: rgba(0, 0, 0, .5);
+    --border: rgba(0, 0, 0, .125);
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --foreground: white;
         --background: black;
-        --border: rgba(255, 255, 255, .0625);
-        --opaque: rgba(255, 255, 255, .5);
+        --border: rgba(255, 255, 255, .125);
     }
 }
 
@@ -34,14 +32,15 @@ form {
     width: 100%;
     border-top: 1px solid;
     border-color: var(--border);
-    background: var(--background)
+    background: var(--background);
+    z-index: 1;
 }
 
 input {
     background-color: inherit;
     height: 48px;
     flex: auto;
-    padding-left: .75rem;
+    padding-left: 14px;
     min-width: 0;
 }
 
@@ -68,15 +67,21 @@ li {
     line-height: 14px;
     display: flex;
     overflow: hidden;
+    position: relative;
 }
 
-li:not(:last-of-type) {
-    border-bottom: 1px solid;
-    border-color: var(--border);
+li:not(:last-of-type)::after {
+    content: "";
+    position: absolute;
+    left: 7px;
+    right: 7px;
+    bottom: 0;
+    border-bottom: 1px solid var(--border);
+    opacity: 0.25;
 }
 
 li .info {
-    padding: .25rem 0.75rem;
+    padding: .25rem 14px;
     margin-top: auto;
     margin-bottom: auto;
     flex: auto;
@@ -86,8 +91,8 @@ li .info:not(:last-child) {
     padding-right: 0;
 }
 
-a:hover,
-a:focus-visible {
+a[href]:hover,
+a[href]:focus-visible {
     text-decoration: underline;
 }
 
@@ -99,14 +104,14 @@ a:focus-visible {
     align-items: center;
 }
 
-.opaque,
+a:not(.btn):not([href]),
 button svg,
 a svg {
     opacity: .5;
 }
 
 li .btn {
-    min-width: 36px;
+    min-width: 48px;
     min-height: 36px;
 }
 
@@ -119,9 +124,7 @@ li a svg {
 button:not(:disabled):hover svg,
 button:not(:disabled):focus-visible svg,
 a[href]:focus-visible svg,
-a[href]:hover svg,
-li>a.info:focus-visible,
-li>a.info:hover {
+a[href]:hover svg {
     opacity: 1;
 }
 
@@ -192,7 +195,6 @@ form:hover .folder,
     opacity: 1;
     position: static;
     pointer-events: auto;
-
 }
 
 @keyframes spin {

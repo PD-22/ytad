@@ -30,7 +30,7 @@ module.exports = (window, lock, destination) => {
             const length = (x => x > 0 ? x : null)(Number(format.contentLength));
 
             command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
-            const file = title.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
+            const file = title.replace(/[^a-zA-Z0-9 _\-\[\]\(\)]/g, '').trim();
             output = uniquePath(join(await destination.get(), `${file}.mp3`));
             lock.inc(output, killCallback);
 
