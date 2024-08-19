@@ -1,14 +1,13 @@
 const { app, BrowserWindow, ipcMain, globalShortcut, Menu, screen } = require('electron');
-const { join, parse } = require('path');
+const { join } = require('path');
 const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
-const { existsSync } = require('fs');
 const { unlink, readdir } = require('fs/promises');
-const Lock = require('./main/lock.js');
-const Destination = require('./main/destination.js');
-const Window = require('./main/window.js');
-const Download = require('./main/download.js')
+const Lock = require('./components/lock.js');
+const Destination = require('./components/destination.js');
+const Window = require('./components/window.js');
+const Download = require('./components/download.js')
 
 if (require('electron-squirrel-startup')) app.quit();
 ffmpeg.setFfmpegPath(ffmpegStatic);

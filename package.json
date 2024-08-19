@@ -3,7 +3,7 @@
   "productName": "ytad",
   "version": "1.0.0",
   "description": "YouTube Audio Downloader",
-  "main": "src/index.js",
+  "main": "src/main.js",
   "scripts": {
     "dev": "electron .",
     "start": "electron-forge start",
