@@ -66,7 +66,7 @@ async function processLink(link, li) {
     } catch (error) {
         if (!link) return li.remove();
         follow(() => {
-            kill.className = 'btn';
+            kill.className = 'btn kill';
             kill.innerHTML = minusIcon;
             kill.title = 'Remove';
             kill.onclick = () => {

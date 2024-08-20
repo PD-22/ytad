@@ -33,7 +33,7 @@ form {
     border-top: 1px solid;
     border-color: var(--border);
     background: var(--background);
-    z-index: 1;
+    z-index: 2;
 }
 
 input {
@@ -92,7 +92,7 @@ li .info:not(:last-child) {
 }
 
 a[href]:hover,
-a[href]:focus-visible {
+a[href]:focus {
     text-decoration: underline;
 }
 
@@ -122,8 +122,8 @@ li a svg {
 }
 
 button:not(:disabled):hover svg,
-button:not(:disabled):focus-visible svg,
-a[href]:focus-visible svg,
+button:not(:disabled):focus svg,
+a[href]:focus svg,
 a[href]:hover svg {
     opacity: 1;
 }
@@ -152,7 +152,7 @@ a[href]:hover svg {
 .over svg {
     transition-property: opacity, width, height;
     transition-timing-function: linear;
-    transition-duration: 30ms;
+    transition-duration: 50ms;
 }
 
 .container:focus-within .under,
@@ -186,24 +186,28 @@ li:hover .over svg {
 
 .container:focus-within .extra,
 li:hover .container .extra {
+    background: var(--background);
+    right: 48px;
     opacity: 1;
-    position: static;
-    right: 0px;
 }
 
 .extra {
-    opacity: 0;
     position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    opacity: 0;
+    transition-timing-function: linear;
+    transition-duration: 50ms;
 }
 
-.folder {
-    opacity: 0;
-    position: absolute;
-    pointer-events: none;
+.kill {
+    z-index: 1;
+    background: var(--background);
 }
 
 form:hover .folder,
-.folder:focus-visible {
+.folder:focus {
     opacity: 1;
     position: static;
     pointer-events: auto;
