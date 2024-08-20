@@ -7,25 +7,36 @@ const { unlink, readdir } = require('fs/promises');
 const Lock = require('./components/lock.js');
 const Destination = require('./components/destination.js');
 const Window = require('./components/window.js');
-const Download = require('./components/download.js')
+const Download = require('./components/download.js');
+const log = require('electron-log');
 
 if (require('electron-squirrel-startup')) app.quit();
 ffmpeg.setFfmpegPath(ffmpegStatic);
+const newLocal = join(app.getPath('logs'), 'main.log');
+log.transports.file.file = newLocal;
+log.transports.file.level = 'error';
 Menu.setApplicationMenu(null);
 
 /** @type {BrowserWindow} */
-let window = null;
+const global = { window: null };
 const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
 const lock = Lock();
 const destination = Destination();
 
 app.whenReady().then(initApp).then(debug);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+process.on('uncaughtException', error => {
+  log.error('Uncaught Exception:', error);
+  app.exit();
+});
+process.on('unhandledRejection', (reason, promise) => {
+  log.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 function initApp() {
-  window = Window();
-  window.on('closed', () => { window = null; });
-  window.on('close', e => { if (!lock.confirm()) e.preventDefault(); });
+  global.window = Window();
+  global.window.on('closed', () => { global.window = null; });
+  global.window.on('close', e => { if (!lock.confirm()) e.preventDefault(); });
 
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) Window(); });
   app.on('browser-window-focus', registerShortcuts);
@@ -40,7 +51,7 @@ function initApp() {
     }
   });
   ipcMain.handle('folder', destination.prompt);
-  ipcMain.handle('download', Download(window, lock, destination));
+  ipcMain.handle('download', Download(global, lock, destination));
 }
 
 function registerShortcuts() {
@@ -53,7 +64,7 @@ function registerShortcuts() {
   globalShortcut.register("F5", restart);
   globalShortcut.register("CommandOrControl+R", restart);
   globalShortcut.register("F11", () =>
-    window.setFullScreen(!window.isFullScreen())
+    global.window.setFullScreen(!global.window.isFullScreen())
   );
 }
 
@@ -67,9 +78,9 @@ async function debug() {
   if (!isDevelopment) return;
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
-  window.setPosition(0, 0);
-  window.setSize(parseInt(width / 2), parseInt(height * 2 / 3));
-  window.webContents.openDevTools();
+  global.window.setPosition(0, 0);
+  global.window.setSize(parseInt(width / 2), parseInt(height * 2 / 3));
+  global.window.webContents.openDevTools();
 
   try {
     const dir = app.getPath('downloads');
@@ -80,7 +91,7 @@ async function debug() {
       .map(file => unlink(join(dir, file)))
     );
   } finally {
-    await window.webContents.executeJavaScript(`(${async () => {
+    await global.window.webContents.executeJavaScript(`(${async () => {
       document.querySelector('input').value = 'https://www.youtube.com/watch?v=NqThf-MpCjs';
       document.querySelector('form').requestSubmit();
     }})()`);

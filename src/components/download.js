@@ -5,7 +5,7 @@ const { join, parse } = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const ytdl = require('@distube/ytdl-core');
 
-module.exports = (window, lock, destination) => {
+module.exports = (global, lock, destination) => {
     return async (_, id, link, title) => {
         const channel = `kill-${id}`;
         /** @type {ffmpeg.FfmpegCommand|undefined} */
@@ -39,7 +39,7 @@ module.exports = (window, lock, destination) => {
                 .on('progress', x => {
                     if (!length) return;
                     const percent = x.targetSize * 1000 / length;
-                    window?.webContents.send(`progress-${id}`, percent);
+                    global.window?.webContents.send(`progress-${id}`, percent);
                 })
                 .on('end', () => { resolve(); })
                 .on('error', err => setTimeout(() => unlink(output)
