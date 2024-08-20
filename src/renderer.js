@@ -4,6 +4,12 @@ const button = form.getElementsByTagName('button')[0];
 const ul = document.getElementsByTagName('ul')[0];
 const folderBtn = document.querySelector('button.folder');
 
+document.addEventListener('keydown', event => {
+    if (event.shiftKey && event.key === 'Escape') {
+        event.preventDefault();
+        input.focus();
+    }
+});
 form.addEventListener('submit', e => {
     e.preventDefault();
     const value = input.value;

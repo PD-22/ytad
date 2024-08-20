@@ -56,10 +56,12 @@ async function processLink(link, li) {
         if (output?.error === 'cancel') throw 'cancel';
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
         follow(() => {
+            const wasActive = document.activeElement === kill;
             kill.remove();
             a.innerHTML = externalIcon;
             a.title = a.href = output;
             a.classList.remove('under');
+            if (wasActive) a.focus();
         });
     } catch (error) {
         if (!link) return li.remove();
@@ -67,13 +69,23 @@ async function processLink(link, li) {
             kill.className = 'btn';
             kill.innerHTML = minusIcon;
             kill.title = 'Remove';
-            kill.onclick = () => { li.remove(); };
+            kill.onclick = () => {
+                const li2 = li.nextElementSibling;
+                li.remove();
+                li2
+                    .querySelector('.container')
+                    .querySelector('a[href], button')
+                    ?.focus();
+            };
             a.remove();
             const retry = document.createElement('button');
             retry.className = 'btn extra';
             retry.innerHTML = rotateIcon;
             retry.title = 'Retry';
-            retry.onclick = () => { processLink(link, li); };
+            retry.onclick = () => {
+                processLink(link, li);
+                li.querySelector('.container .btn.over')?.focus();
+            };
             container.prepend(retry);
         });
         if (error !== 'cancel') console.error(error);

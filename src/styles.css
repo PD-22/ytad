@@ -15,7 +15,7 @@
 body {
     font-family: Consolas, 'Courier New', monospace;
     font-size: large;
-    max-width: 48rem;
+    max-width: 50rem;
     margin: auto;
     height: 100vh;
     display: flex;
@@ -28,7 +28,7 @@ form {
     display: flex;
     position: fixed;
     bottom: 0;
-    max-width: 48rem;
+    max-width: 50rem;
     width: 100%;
     border-top: 1px solid;
     border-color: var(--border);
@@ -68,6 +68,7 @@ li {
     display: flex;
     overflow: hidden;
     position: relative;
+    justify-content: space-between;
 }
 
 li:not(:last-of-type)::after {
@@ -84,7 +85,6 @@ li .info {
     padding: .25rem 14px;
     margin-top: auto;
     margin-bottom: auto;
-    flex: auto;
 }
 
 li .info:not(:last-child) {
