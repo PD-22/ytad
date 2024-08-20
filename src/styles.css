@@ -146,20 +146,30 @@ a[href]:hover svg {
     background: var(--background);
 }
 
+.under,
+.under svg,
+.over,
+.over svg {
+    transition-property: opacity, width, height;
+    transition-timing-function: linear;
+    transition-duration: 30ms;
+}
+
 .container:focus-within .under,
-li:hover .container .under {
+li:hover .under {
     opacity: .33;
 }
 
 .container:focus-within .under svg,
-li:hover .container .under svg {
+li:hover .under svg {
     width: 30px;
     height: 30px;
 }
 
-.container:focus-within .over,
-li:hover .container .over {
-    opacity: 1;
+.container:focus-within .over svg,
+li:hover .over svg {
+    width: 18px;
+    height: 18px;
 }
 
 .container .over {
@@ -167,9 +177,11 @@ li:hover .container .over {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    opacity: 0;
-    width: 18px;
-    height: 18px;
+}
+
+.container .over svg {
+    width: 0;
+    height: 0;
 }
 
 .container:focus-within .extra,
