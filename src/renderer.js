@@ -2,7 +2,7 @@ const form = document.getElementsByTagName('form')[0];
 const input = form.getElementsByTagName('input')[0];
 const ul = document.getElementsByTagName('ul')[0];
 const folderBtn = document.querySelector('button.folder');
-const linkLike = /^\s*(http(s)?:\/\/)?(www\.|music\.)?youtu(be\.com|\.be)\S+\s*$/;
+const linkLike = /^\s*(http(s)?:\/\/)?(www\.|music\.)?youtu(be\.com|\.be)(\/watch(\/)?)?\??[a-zA-Z0-9_&=-]+?\s*$/;
 
 document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;

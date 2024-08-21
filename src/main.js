@@ -85,7 +85,7 @@ async function debug() {
   try {
     const dir = app.getPath('downloads');
     const files = await readdir(dir);
-    const title = 'Gypsy Woman Shes Homeless La Da Dee La Da Da Basement Boy Strip To The Bone Mix';
+    const title = 'Gypsy Woman (Shes Homeless) (La Da Dee La Da Da) (Basement Boy Strip To The Bone Mix)';
     await Promise.allSettled(files
       .filter(file => file.startsWith(title) && file.endsWith('.mp3'))
       .map(file => unlink(join(dir, file)))

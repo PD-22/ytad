@@ -54,6 +54,8 @@ async function processLink(link, li) {
         const wasActive = document.activeElement === kill;
         kill.remove();
         a.innerHTML = externalIcon;
+        a.classList.remove('no-spin');
+        a.classList.add('external');
         a.title = a.href = output;
         a.classList.remove('under');
         if (wasActive) a.focus();
