@@ -20,8 +20,8 @@ Menu.setApplicationMenu(null);
 /** @type {BrowserWindow} */
 const global = { window: null };
 const isDevelopment = !app.isPackaged || process.env.NODE_ENV === 'development';
-const lock = Lock();
-const destination = Destination();
+const lock = Lock(global);
+const destination = Destination(global);
 
 app.whenReady().then(initApp).then(debug);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

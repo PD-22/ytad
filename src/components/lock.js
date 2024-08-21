@@ -1,6 +1,6 @@
 const { dialog } = require('electron');
 
-module.exports = () => {
+module.exports = global => {
     /** @type {Map<string, Set<() => Promise>>} */
     const _ = new Map();
 
@@ -26,7 +26,7 @@ module.exports = () => {
 
     const confirm = () => {
         if (!callbacks().length) return true;
-        const choice = dialog.showMessageBoxSync({
+        const choice = dialog.showMessageBoxSync(global.window, {
             type: 'warning',
             buttons: ['Yes', 'No'],
             title: 'Exit',

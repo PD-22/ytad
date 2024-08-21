@@ -1,14 +1,19 @@
 const form = document.getElementsByTagName('form')[0];
 const input = form.getElementsByTagName('input')[0];
-const button = form.getElementsByTagName('button')[0];
 const ul = document.getElementsByTagName('ul')[0];
 const folderBtn = document.querySelector('button.folder');
 
-document.addEventListener('keydown', event => {
-    if (event.shiftKey && event.key === 'Escape') {
-        event.preventDefault();
-        input.focus();
-    }
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    input.focus();
+    input.select();
+
+});
+document.addEventListener('keyup', e => {
+    if (!e.ctrlKey) return;
+    if (e.code === 'Enter') form.requestSubmit();
+    if (e.code === 'KeyF') folderBtn?.click();
 });
 form.addEventListener('submit', e => {
     e.preventDefault();

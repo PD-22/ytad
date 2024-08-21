@@ -1,7 +1,7 @@
 const { app, dialog } = require('electron');
 const { accessSync, statSync } = require('fs');
 
-module.exports = () => {
+module.exports = global => {
     const fallback = app.getPath('downloads');
     const id = 'destination';
     let _, store;
@@ -26,7 +26,7 @@ module.exports = () => {
 
     const prompt = async () => {
         if (!_) await init();
-        const response = await dialog.showOpenDialog({
+        const response = await dialog.showOpenDialog(global.window, {
             title: 'Select Download Folder',
             defaultPath: isValid(_) ? _ : await init(),
             properties: ['openDirectory']
