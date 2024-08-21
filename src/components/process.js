@@ -1,7 +1,7 @@
 async function processLink(link, li) {
     const a = document.createElement('a');
     const a2 = document.createElement('a');
-    const container = document.createElement('div');
+    const group = document.createElement('div');
     const kill = document.createElement('button');
     let reject;
     const rejectable = (promise, callback) => {
@@ -20,18 +20,18 @@ async function processLink(link, li) {
             if (!li) ul.appendChild(li = document.createElement('li'))
             li.innerHTML = '';
             li.appendChild(a2);
-            a2.className = 'info';
+            a2.className = 'link';
             a2.textContent = link;
 
-            li.appendChild(container);
-            container.className = 'container';
+            li.appendChild(group);
+            group.className = 'group';
 
-            container.append(a)
+            group.append(a)
             a.className = 'btn';
             a.innerHTML = loadingIcon;
             a.classList.add('under');
 
-            container.appendChild(kill);
+            group.appendChild(kill);
             kill.className = 'btn over';
             kill.type = 'button';
             kill.title = 'Cancel';
@@ -73,7 +73,7 @@ async function processLink(link, li) {
                 const li2 = li.nextElementSibling;
                 li.remove();
                 li2
-                    .querySelector('.container')
+                    .querySelector('.group')
                     ?.querySelector('a[href], button')
                     ?.focus();
             };
@@ -84,9 +84,9 @@ async function processLink(link, li) {
             retry.title = 'Retry';
             retry.onclick = () => {
                 processLink(link, li);
-                li.querySelector('.container .btn.over')?.focus();
+                li.querySelector('.group .btn.over')?.focus();
             };
-            container.prepend(retry);
+            group.prepend(retry);
         });
         if (error !== 'cancel') console.error(error);
     }
