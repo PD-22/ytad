@@ -74,7 +74,7 @@ async function processLink(link, li) {
                 li.remove();
                 li2
                     .querySelector('.container')
-                    .querySelector('a[href], button')
+                    ?.querySelector('a[href], button')
                     ?.focus();
             };
             a.remove();

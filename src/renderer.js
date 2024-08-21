@@ -27,10 +27,11 @@ form.addEventListener('keydown', e => {
     if (e.code === "Enter" && (tag === "INPUT" || tag === "BUTTON"))
         e.preventDefault();
 });
-input.addEventListener('paste', () => setTimeout(() => {
+input.addEventListener('input', e => {
+    const isPaste = e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop';
     const linkLike = /^\s*(http(s)?:\/\/)?(www\.|music\.)?youtu(be\.com|\.be)\S+\s*$/;
-    if (linkLike.test(input.value)) form.requestSubmit();
-}));
+    if (isPaste && linkLike.test(input.value)) form.requestSubmit();
+});
 folderBtn.addEventListener('keydown', e => {
     if (e.code === 'Enter') e.stopPropagation();
 });

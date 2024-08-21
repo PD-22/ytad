@@ -34,6 +34,7 @@ form {
     border-top: 1px solid;
     border-color: var(--border);
     background: var(--background);
+    position: relative;
 }
 
 input {
@@ -194,7 +195,8 @@ li:hover .container .extra {
     opacity: 1;
 }
 
-.extra {
+.extra,
+.folder {
     position: absolute;
     top: 0;
     right: 0;
@@ -211,9 +213,13 @@ li:hover .container .extra {
 
 form:hover .folder,
 .folder:focus {
+    right: 48px;
     opacity: 1;
-    position: static;
-    pointer-events: auto;
+}
+
+.download {
+    z-index: 1;
+    background: var(--background);
 }
 
 @keyframes spin {
