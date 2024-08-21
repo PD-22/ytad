@@ -77,9 +77,11 @@ li:not(:last-of-type)::after {
 }
 
 .link {
-    padding: 11px 0 11px 15px;
-    margin-top: auto;
-    margin-bottom: auto;
+    padding-left: 15px;
+    margin: auto 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .link:hover,

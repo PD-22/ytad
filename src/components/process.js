@@ -16,36 +16,32 @@ async function processLink(link, li) {
     };
 
     try {
-        follow(() => {
-            if (!li) ul.appendChild(li = document.createElement('li'))
-            li.innerHTML = '';
-            li.appendChild(a2);
-            a2.className = 'link';
-            a2.textContent = link;
+        if (!li) ul.appendChild(li = document.createElement('li'))
+        li.innerHTML = '';
+        li.appendChild(a2);
+        a2.className = 'link';
+        a2.textContent = link;
 
-            li.appendChild(group);
-            group.className = 'group';
+        li.appendChild(group);
+        group.className = 'group';
 
-            group.append(a)
-            a.className = 'btn';
-            a.innerHTML = loadingIcon;
-            a.classList.add('under');
+        group.append(a)
+        a.className = 'btn';
+        a.innerHTML = loadingIcon;
+        a.classList.add('under');
 
-            group.appendChild(kill);
-            kill.className = 'btn over';
-            kill.type = 'button';
-            kill.title = 'Cancel';
-            kill.innerHTML = xIcon;
-            kill.onclick = () => { reject?.('cancel'); };
-        });
+        group.appendChild(kill);
+        kill.className = 'btn over';
+        kill.type = 'button';
+        kill.title = 'Cancel';
+        kill.innerHTML = xIcon;
+        kill.onclick = () => { reject?.('cancel'); };
 
         const { url, title } = await rejectable(window.api.info(link));
         if (typeof title !== 'string' || !title) throw new Error('Invalid title')
         if (typeof url !== 'string' || !url) throw new Error('Invalid url')
-        follow(() => {
-            a2.textContent = title;
-            a2.title = a2.href = link = url;
-        });
+        a2.textContent = title;
+        a2.title = a2.href = link = url;
 
         const id = Math.random();
         window.api.onProgress(id, p => setPercent?.(p));
@@ -55,56 +51,37 @@ async function processLink(link, li) {
         );
         if (output?.error === 'cancel') throw 'cancel';
         if (typeof output !== 'string' || !output) throw new Error('Invalid output');
-        follow(() => {
-            const wasActive = document.activeElement === kill;
-            kill.remove();
-            a.innerHTML = externalIcon;
-            a.title = a.href = output;
-            a.classList.remove('under');
-            if (wasActive) a.focus();
-        });
+        const wasActive = document.activeElement === kill;
+        kill.remove();
+        a.innerHTML = externalIcon;
+        a.title = a.href = output;
+        a.classList.remove('under');
+        if (wasActive) a.focus();
     } catch (error) {
         if (!link) return li.remove();
-        follow(() => {
-            kill.className = 'btn kill';
-            kill.innerHTML = minusIcon;
-            kill.title = 'Remove';
-            kill.onclick = () => {
-                const li2 = li.nextElementSibling;
-                li.remove();
-                li2
-                    .querySelector('.group')
-                    ?.querySelector('a[href], button')
-                    ?.focus();
-            };
-            a.remove();
-            const retry = document.createElement('button');
-            retry.className = 'btn extra';
-            retry.innerHTML = rotateIcon;
-            retry.title = 'Retry';
-            retry.onclick = () => {
-                processLink(link, li);
-                li.querySelector('.group .btn.over')?.focus();
-            };
-            group.prepend(retry);
-        });
+
+        kill.className = 'btn kill';
+        kill.innerHTML = minusIcon;
+        kill.title = 'Remove';
+        kill.onclick = () => {
+            const li2 = li.nextElementSibling;
+            li.remove();
+            li2
+                .querySelector('.group')
+                ?.querySelector('a[href], button')
+                ?.focus();
+        };
+        a.remove();
+        const retry = document.createElement('button');
+        retry.className = 'btn extra';
+        retry.innerHTML = rotateIcon;
+        retry.title = 'Retry';
+        retry.onclick = () => {
+            processLink(link, li);
+            li.querySelector('.group .btn.over')?.focus();
+        };
+        group.prepend(retry);
+
         if (error !== 'cancel') console.error(error);
     }
-}
-
-function follow(callbackfn) {
-    const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
-    const isBottom = (window.scrollY || scrollTop) + clientHeight >= scrollHeight;
-    try {
-        callbackfn();
-    } finally {
-        if (isBottom) scrollBottom();
-    }
-}
-
-function scrollBottom() {
-    window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: 'smooth'
-    });
 }

@@ -2,6 +2,7 @@ const form = document.getElementsByTagName('form')[0];
 const input = form.getElementsByTagName('input')[0];
 const ul = document.getElementsByTagName('ul')[0];
 const folderBtn = document.querySelector('button.folder');
+const linkLike = /^\s*(http(s)?:\/\/)?(www\.|music\.)?youtu(be\.com|\.be)\S+\s*$/;
 
 document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
@@ -19,8 +20,10 @@ form.addEventListener('submit', e => {
     e.preventDefault();
     const value = input.value;
     if (!value.trim()) return;
-    if (!/http(s):\/\//.test(value)) input.value = `https://${value}`;
-    processLink(value);
+    const newValue = `https://${value.replace(/^http(s)?:\/\//, '')}`;
+    if (linkLike.test(newValue)) input.value = newValue;
+    processLink(input.value);
+    ul.scrollTo({ top: ul.scrollHeight, behavior: 'smooth' });
 });
 form.addEventListener('keyup', e => {
     const tag = e.target.tagName;
@@ -34,7 +37,6 @@ form.addEventListener('keydown', e => {
 });
 input.addEventListener('input', e => {
     const isPaste = e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop';
-    const linkLike = /^\s*(http(s)?:\/\/)?(www\.|music\.)?youtu(be\.com|\.be)\S+\s*$/;
     if (isPaste && linkLike.test(input.value)) form.requestSubmit();
 });
 folderBtn.addEventListener('keydown', e => {
