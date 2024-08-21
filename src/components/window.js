@@ -1,4 +1,4 @@
-const { BrowserWindow, Menu, shell, clipboard } = require('electron');
+const { BrowserWindow, Menu, shell, clipboard, MenuItem } = require('electron');
 const { dirname, join } = require('path');
 const { existsSync } = require('fs');
 
@@ -32,17 +32,25 @@ module.exports = () => {
   window.webContents.on('will-redirect', handleLink);
   window.webContents.on('will-frame-navigate', handleLink);
 
-  window.webContents.on('context-menu', (_, event) => {
-    const click = () => clipboard.writeText(event.selectionText || event.linkURL);
+  window.webContents.on('context-menu', (_,
+    { selectionText, linkText, linkURL }
+  ) => {
     Menu.buildFromTemplate([
       { role: 'cut' },
-      { label: 'Copy', click },
+      {
+        label: 'Copy',
+        click: () => clipboard.writeText(selectionText || linkText)
+      },
+      linkURL && {
+        label: 'Copy Link',
+        click: () => clipboard.writeText(linkURL)
+      },
       { role: 'paste' },
       { role: 'delete' }
-    ]).popup(window);
+    ].filter(Boolean)).popup(window)
   });
 
   window.loadFile(join(__dirname, '../index.html'));
 
-  return window
+  return window;
 }
