@@ -69,7 +69,7 @@ async function processLink(link, li) {
             const li2 = li.nextElementSibling;
             li.remove();
             li2
-                .querySelector('.group')
+                ?.querySelector('.group')
                 ?.querySelector('a[href], button')
                 ?.focus();
         };

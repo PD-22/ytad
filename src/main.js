@@ -12,9 +12,8 @@ const log = require('electron-log');
 
 if (require('electron-squirrel-startup')) app.quit();
 ffmpeg.setFfmpegPath(ffmpegStatic);
-const newLocal = join(app.getPath('logs'), 'main.log');
-log.transports.file.file = newLocal;
-log.transports.file.level = 'error';
+log.transports.file.file = join(app.getPath('logs'), 'main.log');
+log.transports.file.level = 'info';
 Menu.setApplicationMenu(null);
 
 /** @type {BrowserWindow} */
