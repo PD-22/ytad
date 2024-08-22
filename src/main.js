@@ -51,6 +51,8 @@ function initApp() {
   });
   ipcMain.handle('folder', destination.prompt);
   ipcMain.handle('download', Download(global, lock, destination));
+  ipcMain.handle('take', (_, id) => lock.take(id));
+  ipcMain.handle('free', (_, id) => lock.free(id));
 }
 
 function registerShortcuts() {

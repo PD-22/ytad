@@ -1,4 +1,5 @@
 async function processLink(link, li) {
+    const id = Math.random();
     const a = document.createElement('a');
     const a2 = document.createElement('a');
     const group = document.createElement('div');
@@ -37,13 +38,13 @@ async function processLink(link, li) {
         kill.innerHTML = xIcon;
         kill.onclick = () => { reject?.('cancel'); };
 
+        await window.api.take(id);
         const { url, title } = await rejectable(window.api.info(link));
         if (typeof title !== 'string' || !title) throw new Error('Invalid title')
         if (typeof url !== 'string' || !url) throw new Error('Invalid url')
         a2.textContent = title;
         a2.title = a2.href = link = url;
 
-        const id = Math.random();
         window.api.onProgress(id, p => setPercent?.(p));
         const output = await rejectable(
             window.api.download(id, link, title),
@@ -85,5 +86,7 @@ async function processLink(link, li) {
         group.prepend(retry);
 
         if (error !== 'cancel') console.error(error);
+    } finally {
+        await window.api.free(id);
     }
 }

@@ -32,7 +32,7 @@ module.exports = (global, lock, destination) => {
             command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
             const file = title.replace(/[^a-zA-Z0-9 _\-\[\]\(\)]/g, '').trim();
             output = uniquePath(join(await destination.get(), `${file}.mp3`));
-            lock.inc(output, killCallback);
+            lock.append(id, output, killCallback);
 
             await new Promise((resolve, reject) => command
                 .format('mp3')
@@ -53,9 +53,9 @@ module.exports = (global, lock, destination) => {
             if (error?.message === sigkill) return { error: 'cancel' };
             throw error;
         } finally {
-            lock.dec(output, killCallback);
             ipcMain.removeListener(channel, listener);
             command?.kill();
+            await lock.free(id);
         }
     }
 
@@ -64,7 +64,7 @@ module.exports = (global, lock, destination) => {
         const [, main = name, digits] = name.match(/^(.+)\s\((\d+)\)/) ?? [];
         let count = parseInt(digits ?? 0);
 
-        while (lock.count(path) || existsSync(path))
+        while (lock.loading(path) || existsSync(path))
             path = join(dir, `${main} (${++count})${ext}`);
 
         return path;

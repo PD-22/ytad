@@ -1,31 +1,33 @@
 const { dialog } = require('electron');
 
 module.exports = global => {
-    /** @type {Map<string, Set<() => Promise>>} */
+    /** @type {Map<string, { path: string; cb?: () => Promise<any>; }>} */
     const _ = new Map();
 
-    const get = k => _.get(k);
-    const has = k => _.has(k);
-    const set = (k, v) => _.set(k, v);
-    const count = k => get(k)?.size ?? 0;
-
-    const inc = (k, f) => { if (!has(k)) set(k, new Set()); get(k).add(f); };
-
-    const dec = (k, v) => {
-        if (!has(k)) return;
-        const killSet = get(k);
-        if (!killSet.has(v)) return;
-        killSet.delete(v);
-        if (!killSet.size) _.delete(k);
+    const take = id => {
+        _.set(id);
     };
 
-    const callbacks = () => Array.from(_.values())
-        .flatMap(s => Array.from(s.values()));
+    const append = (id, path, cb) => {
+        _.set(id, { path, cb });
+    };
 
-    const clean = () => Promise.all(callbacks().map(f => f()));
+    const free = id => {
+        _.delete(id);
+    };
+
+    const loading = path => Array.from(_.values())
+        .some(x => x?.path === path);
+
+    const clean = () => Promise.allSettled(
+        Array.from(_.values())
+            .map(s => s?.cb)
+            .filter(x => x !== undefined)
+            .map(f => f())
+    );
 
     const confirm = () => {
-        if (!callbacks().length) return true;
+        if (!Array.from(_.values()).length) return true;
         const choice = dialog.showMessageBoxSync(global.window, {
             type: 'warning',
             buttons: ['Yes', 'No'],
@@ -35,5 +37,5 @@ module.exports = global => {
         return choice === 0;
     };
 
-    return { count, inc, dec, clean, confirm };
+    return { take, append, free, loading, clean, confirm };
 }
