@@ -1,14 +1,16 @@
 :root {
-    --foreground: black;
-    --background: white;
+    --foreground: rgb(0, 0, 0);
+    --background: rgb(255, 255, 255);
     --border: rgba(0, 0, 0, .125);
+    --transparent: rgba(255, 255, 255, .875);
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --foreground: white;
-        --background: black;
+        --foreground: rgb(255, 255, 255);
+        --background: rgb(0, 0, 0);
         --border: rgba(255, 255, 255, .125);
+        --transparent: rgba(0, 0, 0, .875);
     }
 }
 
@@ -180,6 +182,7 @@ li:hover .group .extra {
     opacity: 0;
     transition-timing-function: linear;
     transition-duration: 50ms;
+    background: var(--transparent);
 }
 
 .kill {
