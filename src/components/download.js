@@ -4,8 +4,9 @@ const { unlink } = require('fs/promises');
 const { join, parse } = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const ytdl = require('@distube/ytdl-core');
+const log = require('electron-log');
 
-module.exports = (global, lock, destination) => {
+module.exports = (global, lock, destination, filenamify) => {
     return async (_, id, link, title) => {
         const channel = `kill-${id}`;
         /** @type {ffmpeg.FfmpegCommand|undefined} */
@@ -30,7 +31,7 @@ module.exports = (global, lock, destination) => {
             const length = (x => x > 0 ? x : null)(Number(format.contentLength));
 
             command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
-            const file = title.replace(/[^a-zA-Z0-9 _\-\[\]\(\)]/g, '').trim();
+            const file = filenamify(title).trim();
             output = uniquePath(join(await destination.get(), `${file}.mp3`));
             lock.append(id, output, killCallback);
 
@@ -47,6 +48,7 @@ module.exports = (global, lock, destination) => {
                 ))
                 .save(output)
             );
+            log.info({ link, title, output });
             return output;
         } catch (error) {
             const sigkill = 'ffmpeg was killed with signal SIGKILL'

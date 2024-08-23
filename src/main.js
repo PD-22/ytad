@@ -32,7 +32,9 @@ process.on('unhandledRejection', (reason, promise) => {
   log.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-function initApp() {
+async function initApp() {
+  const { default: filenamify } = await import('filenamify');
+
   global.window = Window();
   global.window.on('closed', () => { global.window = null; });
   global.window.on('close', e => { if (!lock.confirm()) e.preventDefault(); });
@@ -50,7 +52,7 @@ function initApp() {
     }
   });
   ipcMain.handle('folder', destination.prompt);
-  ipcMain.handle('download', Download(global, lock, destination));
+  ipcMain.handle('download', Download(global, lock, destination, filenamify));
   ipcMain.handle('take', (_, id) => lock.take(id));
   ipcMain.handle('free', (_, id) => lock.free(id));
 }
