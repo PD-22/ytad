@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain, globalShortcut, Menu, screen } = require('electron');
 const { join } = require('path');
-const ytdl = require('@distube/ytdl-core');
 const ffmpegStatic = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
 const { unlink, readdir } = require('fs/promises');
@@ -9,9 +8,21 @@ const Destination = require('./components/destination.js');
 const Window = require('./components/window.js');
 const Download = require('./components/download.js');
 const log = require('electron-log');
+const { promisify } = require('util');
+const { exec } = require('child_process');
 
 if (require('electron-squirrel-startup')) app.quit();
 ffmpeg.setFfmpegPath(ffmpegStatic);
+const ytdlPath = join(__dirname, '..', 'yt-dlp.exe');
+const ytdlExec = async (link, rest) => {
+  const command = `"${ytdlPath}" ${rest} "${link}"`;
+  const { stdout, stderr } = await promisify(exec)(command);
+  if (stderr) throw new Error(stderr);
+  return stdout;
+};
+const ytdl = {
+  getInfo: link => ytdlExec(link, '--dump-json').then(JSON.parse)
+};
 log.transports.file.file = join(app.getPath('logs'), 'main.log');
 log.transports.file.level = 'info';
 Menu.setApplicationMenu(null);
@@ -46,13 +57,10 @@ async function initApp() {
 
   ipcMain.handle('info', async (_, link) => {
     const info = await ytdl.getInfo(link);
-    return {
-      url: info.videoDetails.video_url,
-      title: info.videoDetails.title
-    }
+    return { url: info.webpage_url, title: info.title };
   });
   ipcMain.handle('folder', destination.prompt);
-  ipcMain.handle('download', Download(global, lock, destination, filenamify));
+  ipcMain.handle('download', Download(global, lock, destination, filenamify, ytdl));
   ipcMain.handle('take', (_, id) => lock.take(id));
   ipcMain.handle('free', (_, id) => lock.free(id));
 }

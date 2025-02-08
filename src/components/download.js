@@ -3,10 +3,9 @@ const { existsSync } = require('fs');
 const { unlink } = require('fs/promises');
 const { join, parse } = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const ytdl = require('@distube/ytdl-core');
 const log = require('electron-log');
 
-module.exports = (global, lock, destination, filenamify) => {
+module.exports = (global, lock, destination, filenamify, ytdl) => {
     return async (_, id, link, title) => {
         const channel = `kill-${id}`;
         /** @type {ffmpeg.FfmpegCommand|undefined} */
@@ -25,12 +24,12 @@ module.exports = (global, lock, destination, filenamify) => {
             const info = await ytdl.getInfo(link);
             if (aborted) return;
 
-            const format = ytdl.chooseFormat(info.formats,
-                { quality: 'highestaudio', filter: 'audioonly' }
-            );
-            const length = (x => x > 0 ? x : null)(Number(format.contentLength));
+            const format = info.formats
+                .filter(f => f.audio_channels)
+                .reduce((a, c) => (c.quality > a.quality ? c : a))
+            const length = format.filesize || format.filesize_approx;
 
-            command = ffmpeg(ytdl.downloadFromInfo(info, { format }));
+            command = ffmpeg(format.url)
             const file = filenamify(title).trim();
             output = uniquePath(join(await destination.get(), `${file}.mp3`));
             lock.append(id, output, killCallback);
