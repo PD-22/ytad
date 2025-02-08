@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "YouTube Audio Downloader",
   "main": "src/main.js",
+  "keywords": [],
+  "author": "PD-22",
+  "license": "MIT",
   "scripts": {
     "dev": "electron .",
     "start": "electron-forge start",
@@ -13,23 +16,14 @@
     "test": "node test"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.4.0",
-    "@electron-forge/maker-deb": "^7.4.0",
-    "@electron-forge/maker-rpm": "^7.4.0",
-    "@electron-forge/maker-squirrel": "^7.4.0",
-    "@electron-forge/maker-zip": "^7.4.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
-    "@electron-forge/plugin-fuses": "^7.4.0",
-    "@electron/fuses": "^1.8.0",
-    "electron": "^31.4.0"
+    "@electron-forge/cli": "^7.6.1",
+    "@electron-forge/maker-squirrel": "^7.6.1",
+    "electron": "^34.1.1"
   },
-  "keywords": [],
-  "author": "PD-22",
-  "license": "MIT",
   "dependencies": {
-    "electron-log": "^5.1.7",
+    "electron-log": "^5.3.0",
     "electron-squirrel-startup": "^1.0.1",
-    "electron-store": "^10.0.0",
+    "electron-store": "^10.0.1",
     "ffmpeg-static": "^5.2.0",
     "filenamify": "^6.0.0",
     "fluent-ffmpeg": "^2.1.3"

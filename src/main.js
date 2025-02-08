@@ -1,3 +1,4 @@
+const squirrel = require('electron-squirrel-startup');
 const { app, BrowserWindow, ipcMain, globalShortcut, Menu, screen } = require('electron');
 const { join } = require('path');
 const ffmpegStatic = require('ffmpeg-static');
@@ -11,7 +12,8 @@ const log = require('electron-log');
 const { promisify } = require('util');
 const { exec } = require('child_process');
 
-if (require('electron-squirrel-startup')) app.quit();
+if (squirrel || process.argv[1] === '--squirrel-firstrun') app.quit();
+
 ffmpeg.setFfmpegPath(ffmpegStatic);
 const ytdlPath = join(__dirname, '..', 'yt-dlp.exe');
 const ytdlExec = async (link, rest) => {
