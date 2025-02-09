@@ -27,7 +27,7 @@ async function start(link) {
         writeFile('log.json', JSON.stringify(info, null, 2));
         const format = formats
             .filter(f => f.audio_channels)
-            .reduce((a, c) => (c.quality > a.quality ? c : a))
+            .reduce((a, c) => (c.quality < a.quality ? c : a));
         if (!format) throw new Error('Missing format');
 
         const length = format.filesize || format.filesize_approx;

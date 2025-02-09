@@ -26,7 +26,7 @@ module.exports = (global, lock, destination, filenamify, ytdl) => {
 
             const format = info.formats
                 .filter(f => f.audio_channels)
-                .reduce((a, c) => (c.quality > a.quality ? c : a))
+                .reduce((a, c) => (c.quality < a.quality ? c : a))
             const length = format.filesize || format.filesize_approx;
 
             command = ffmpeg(format.url)
