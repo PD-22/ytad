@@ -8,7 +8,7 @@ const { exec } = require('child_process');
 ffmpeg.setFfmpegPath(ffmpegStatic);
 const ytdlPath = join(__dirname, 'yt-dlp.exe');
 const ytdl = async (link, rest) => {
-    const command = `"${ytdlPath}" ${rest} "${link}"`;
+    const command = `"${ytdlPath}" --js-runtimes node ${rest} "${link}"`;
     const { stdout, stderr } = await promisify(exec)(command);
     if (stderr) throw new Error(stderr);
     return stdout;
